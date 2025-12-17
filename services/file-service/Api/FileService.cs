@@ -32,6 +32,10 @@ namespace Api
                 var makeArgs = new MakeBucketArgs().WithBucket(bucketName);
                 await _minioClient.MakeBucketAsync(makeArgs).ConfigureAwait(false);
             }
+            if (!_contentTypeProvider.TryGetContentType(objectName, out string contentType))
+            {
+                contentType = "application/octet-stream";
+            }
 
             using var stream = new MemoryStream(fileData);
 
@@ -40,7 +44,7 @@ namespace Api
                 .WithObject(objectName)
                 .WithStreamData(stream)
                 .WithObjectSize(stream.Length)
-                .WithContentType("application/octet-stream"); // убираем жёсткое задание типа
+                .WithContentType(contentType);
 
             await _minioClient.PutObjectAsync(putObjectArgs).ConfigureAwait(false);
         }
@@ -72,9 +76,15 @@ namespace Api
                     // но исключение ObjectNotFoundException не было брошено.
                     return (null, null);
                 }
+                if (!_contentTypeProvider.TryGetContentType(objectName, out string contentType))
+                {
+                    contentType = "application/octet-stream";
+                }
+
+                // 6. ВОЗВРАЩАЕМ ДАННЫЕ И ТИП
+                return (memoryStream.ToArray(), contentType);
 
                 // 5. Возвращаем данные в виде массива байтов
-                return (memoryStream.ToArray(), "application/octet-stream");
             }
             catch (Minio.Exceptions.ObjectNotFoundException)
             {
