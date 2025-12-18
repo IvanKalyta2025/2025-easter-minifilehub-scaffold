@@ -16,11 +16,11 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public IActionResult Register(RegisterRequest request)
+    public async Task<IActionResult> Register(RegisterRequest request)
     {
         try
         {
-            var user = _userService.Register(request.Email, request.Password);
+            var user = await _userService.RegisterAsync(request.Email, request.Password);
             return Ok(user);
         }
         catch (ArgumentException ex)
@@ -38,9 +38,9 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public IActionResult Login(LoginRequest request)
+    public async Task<IActionResult> Login(LoginRequest request)
     {
-        var user = _userService.Login(request.Email, request.Password);
+        var user = await _userService.LoginAsync(request.Email, request.Password);
 
         if (user == null)
             return Unauthorized("Invalid email or password.");

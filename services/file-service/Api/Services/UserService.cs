@@ -14,9 +14,9 @@ public class UserService
         _repository = repository;
     }
 
-    public User Register(string email, string password)
+    public async Task<User> RegisterAsync(string email, string password)
     {
-        var existing = _repository.GetByEmail(email);
+        var existing = await _repository.GetByEmailAsync(email);
         if (existing != null)
             throw new InvalidOperationException("Email already in use.");
         //error checking
@@ -26,12 +26,12 @@ public class UserService
             PasswordHash = HashPassword(password)
         };
 
-        _repository.Add(user);
+        await _repository.AddAsync(user);
         return user;
     }
-    public User? Login(string email, string password)
+    public async Task<User?> LoginAsync(string email, string password)
     {
-        var user = _repository.GetByEmail(email);
+        var user = await _repository.GetByEmailAsync(email);
         if (user == null)
             return null;
 
