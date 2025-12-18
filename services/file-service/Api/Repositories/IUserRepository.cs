@@ -8,8 +8,8 @@ namespace Api.Repositories
 {
     public interface IUserRepository
     {
-        void Add(User user);
-        User? GetByEmail(string email);
+        Task AddAsync(User user);
+        Task<User?> GetByEmailAsync(string email);
     }
 
 }

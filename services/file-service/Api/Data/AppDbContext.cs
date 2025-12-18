@@ -7,6 +7,7 @@ using Api.Data;
 using Api.Models;
 
 
+
 namespace Api.Data
 {
     public class AppDbContext : DbContext
@@ -18,6 +19,7 @@ namespace Api.Data
         }
 
         public DbSet<User> Users => Set<User>();
+        public DbSet<Profile> Profiles { get; set; }
     }
 
 }
