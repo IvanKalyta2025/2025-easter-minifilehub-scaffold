@@ -22,7 +22,7 @@ namespace Api
             _contentTypeProvider = new FileExtensionContentTypeProvider();
         }
 
-        public async Task UploadFileAsync(string bucketName, string objectName, byte[] fileData)
+        public async Task<string> UploadFileAsync(string bucketName, string objectName, byte[] fileData)
         {
             var existsArgs = new BucketExistsArgs().WithBucket(bucketName);
             bool found = await _minioClient.BucketExistsAsync(existsArgs).ConfigureAwait(false);
@@ -47,7 +47,10 @@ namespace Api
                 .WithContentType(contentType);
 
             var result = await _minioClient.PutObjectAsync(putObjectArgs).ConfigureAwait(false);
-            Console.WriteLine($"File '{objectName}' uploaded to bucket '{bucketName}'.");
+            //Console.WriteLine($"File '{objectName}' uploaded to bucket '{bucketName}'.");
+            //ругался на отсутствие return string
+            var fileUrl = $"http://localhost:9000/{bucketName}/{objectName}";
+            return fileUrl;
         }
         public async Task<(byte[] Data, string ContentType)> DownloadFileAsync(string bucketName, string objectName) //добавлен ContentType
         {
