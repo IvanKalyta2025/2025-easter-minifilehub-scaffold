@@ -10,6 +10,7 @@ namespace Api.Repositories
     {
         Task AddAsync(Profile profile);
         Task<Profile?> GetByUserIdAsync(Guid userId);
+        Task UploadFileAsync(string objectName, Stream fileData);
     }
 }
 

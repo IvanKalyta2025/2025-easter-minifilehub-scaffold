@@ -46,7 +46,8 @@ namespace Api
                 .WithObjectSize(stream.Length)
                 .WithContentType(contentType);
 
-            await _minioClient.PutObjectAsync(putObjectArgs).ConfigureAwait(false);
+            var result = await _minioClient.PutObjectAsync(putObjectArgs).ConfigureAwait(false);
+            Console.WriteLine($"File '{objectName}' uploaded to bucket '{bucketName}'.");
         }
         public async Task<(byte[] Data, string ContentType)> DownloadFileAsync(string bucketName, string objectName) //добавлен ContentType
         {
