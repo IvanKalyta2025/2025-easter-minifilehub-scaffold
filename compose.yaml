@@ -4,6 +4,8 @@ services:
     ports:
       - "80:80"
       - "9001:8080"
+    environment:
+      - DOCKER_API_VERSION=1.44 # <--- ПЕРЕНЕСЛИ СЮДА
     command:
       - "--api.insecure=true"
       - "--providers.docker=true"
@@ -21,7 +23,6 @@ services:
 
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - DOCKER_API_VERSION=1.44
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=filesdb;Username=user;Password=pass
     depends_on:
       - postgres
