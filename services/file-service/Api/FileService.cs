@@ -49,7 +49,7 @@ namespace Api
             var result = await _minioClient.PutObjectAsync(putObjectArgs).ConfigureAwait(false);
             //Console.WriteLine($"File '{objectName}' uploaded to bucket '{bucketName}'.");
             //ругался на отсутствие return string
-            var fileUrl = $"http://localhost:9000/{bucketName}/{objectName}";
+            var fileUrl = $"http://file-service.localhost/{bucketName}/{objectName}";
             return fileUrl;
         }
         public async Task<(byte[] Data, string ContentType)> DownloadFileAsync(string bucketName, string objectName) //добавлен ContentType

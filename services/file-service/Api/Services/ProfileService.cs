@@ -23,7 +23,7 @@ namespace Api.Services
 
         public async Task CreateProfileAsync(Guid userId, string firstName, string lastName, byte[] fileData, string fileName)
         {
-            var fileUrl = await _fileService.UploadFileAsync("sape", fileName, fileData);
+            var fileUrl = await _fileService.UploadFileAsync("profiles", fileName, fileData);
 
             var profile = new Profile
             {

@@ -16,8 +16,15 @@ services:
     # ...
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`file-service.localhost`)"
+      - "traefik.http.routers.backend.rule=Host(`77.42.72.42`) || Host(`localhost`)"
       - "traefik.http.services.backend.loadbalancer.server.port=8080"
+
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=filesdb;Username=user;Password=pass
+    depends_on:
+      - postgres
+      - object-storage
     # Pass in connection information as Environment Variables
     # environment:
     # - PostgreSQL Connection Info
