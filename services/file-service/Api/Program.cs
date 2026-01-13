@@ -4,9 +4,11 @@ using Api.Services;
 using Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Api.Repositories;
+using System.Security.Claims;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 var builder = WebApplication.CreateBuilder(args);
+var appswagger = builder.Build();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql("Host=postgres;Database=filesdb;Username=user;Password=pass"));
@@ -15,10 +17,20 @@ builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
 builder.Services.AddScoped<IUserRepository, UserRepositoryDb>();
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 builder.Services.AddScoped<UserService>();
 builder.Services.AddControllers();
 
 builder.Services.AddScoped<FileService>();
+
+if (appswagger.Environment.IsDevelopment())
+{
+    appswagger.UseSwagger();
+    appswagger.UseSwaggerUI();
+}
 
 var app = builder.Build();
 
