@@ -8,7 +8,7 @@ using System.Security.Claims;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 var builder = WebApplication.CreateBuilder(args);
-var appswagger = builder.Build();
+// var appswagger = builder.Build();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql("Host=postgres;Database=filesdb;Username=user;Password=pass"));
@@ -26,13 +26,14 @@ builder.Services.AddControllers();
 
 builder.Services.AddScoped<FileService>();
 
-if (appswagger.Environment.IsDevelopment())
-{
-    appswagger.UseSwagger();
-    appswagger.UseSwaggerUI();
-}
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 using (var scope = app.Services.CreateScope())
 {
@@ -48,6 +49,7 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"Ошибка при миграции: {ex.Message}");
     }
 }
+
 
 app.UseAuthorization();
 app.MapControllers();
