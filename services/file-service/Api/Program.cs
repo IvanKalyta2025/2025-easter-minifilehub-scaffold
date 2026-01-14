@@ -1,4 +1,5 @@
 using Minio;
+using Microsoft.AspNetCore.HttpOverrides;
 using Api;
 using Api.Services;
 using Api.Data;
@@ -25,11 +26,19 @@ builder.Services.AddScoped<FileService>();
 
 
 var app = builder.Build();
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        //направление пути для того что бы свагер мог понимать что его испольщует трафик.
+        options.SwaggerEndpoint("v1/swagger.json", "File Service API V1");
+    });
 }
 
 using (var scope = app.Services.CreateScope())
