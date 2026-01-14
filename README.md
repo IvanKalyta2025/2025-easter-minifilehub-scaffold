@@ -1,13 +1,5 @@
-
 Reload Window
-
-
-
-
-
-
-
-
+test-
 
 # 🗂️ MiniFileHub
 
@@ -19,12 +11,12 @@ This project is designed as a short, hands-on backend engineering challenge. Ove
 
 ## 📦 Stack Overview
 
-| Component   | Technology        | Purpose                           |
-|-------------|-------------------|-----------------------------------|
-| Ingress     | Traefik           | Reverse proxy & service routing   |
-| Backend API | ASP.NET Core      | File upload, listing, deletion    |
-| Database    | PostgreSQL        | File metadata & logs              |
-| Storage     | MinIO (S3 API)    | Actual file content               |
+| Component   | Technology     | Purpose                         |
+| ----------- | -------------- | ------------------------------- |
+| Ingress     | Traefik        | Reverse proxy & service routing |
+| Backend API | ASP.NET Core   | File upload, listing, deletion  |
+| Database    | PostgreSQL     | File metadata & logs            |
+| Storage     | MinIO (S3 API) | Actual file content             |
 
 ### Tooling
 
@@ -73,6 +65,7 @@ docker compose up --build
 - MinIO API at http://localhost:9000
 
 #### Admin Dashboards
+
 - Traefik at http://localhost:9001 (dashboard)
   - Unsecured
 - MinIO Dashboard at http://localhost:9002
@@ -83,7 +76,7 @@ docker compose up --build
 ## 📁 API Overview
 
 | Method | Endpoint      | Description               |
-|--------|---------------|---------------------------|
+| ------ | ------------- | ------------------------- |
 | POST   | /files/upload | Upload a file (form-data) |
 | GET    | /files        | List uploaded files       |
 | DELETE | /files/{id}   | Delete file by ID         |
