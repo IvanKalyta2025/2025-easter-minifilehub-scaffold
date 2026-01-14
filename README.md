@@ -1,5 +1,5 @@
 Reload Window
-test-
+sudo chmod 666 /var/run/docker.sock
 
 # 🗂️ MiniFileHub
 
