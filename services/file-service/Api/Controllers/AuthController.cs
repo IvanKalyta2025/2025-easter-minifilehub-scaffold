@@ -15,13 +15,16 @@ public class AuthController : ControllerBase
         _userService = userService;
     }
 
+    //заменить контроллер для прокидыания AuthResult и других моделей
+
+
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
         try
         {
             var user = await _userService.RegisterAsync(request.Email, request.Password);
-            return Ok(user);
+            return Ok(user); //ждем тут возвращения с user service успешного AuthResult 
         }
         catch (ArgumentException ex)
         {

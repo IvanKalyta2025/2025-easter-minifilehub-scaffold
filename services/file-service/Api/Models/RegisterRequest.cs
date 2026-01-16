@@ -5,5 +5,5 @@ using System.Threading.Tasks;
 
 namespace Api.Models
 {
-    public record RegisterRequest(string Email, string Password);
+    public record RegisterRequest(string Email, string Password, User? User = null);
 }

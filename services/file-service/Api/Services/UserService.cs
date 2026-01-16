@@ -1,5 +1,6 @@
 using Api.Models;
 using Api.Repositories;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -16,30 +17,42 @@ public class UserService
         _repository = repository;
     }
 
-    public async Task<User> RegisterAsync(string email, string password)
-    {
-        var existing = await _repository.GetByEmailAsync(email);
-        if (existing != null)
-            throw new InvalidOperationException("Email already in use.");
+    // public async Task<User> RegisterAsync(string email, string password)
+    // {
+    //     var existing = await _repository.GetByEmailAsync(email);
+    //     if (existing != null)
+    //         throw new InvalidOperationException("Email already in use.");
 
-        else if (string.IsNullOrWhiteSpace(password) || password.Length < 6)
-            throw new ArgumentException("Invalid password.");
+    //     else if (string.IsNullOrWhiteSpace(password) || password.Length < 6)
+    //         throw new ArgumentException("Invalid password.");
+
+    //     var user = new User
+    //     {
+    //         Email = email,
+    //         PasswordHash = HashPassword(password)
+    //     };
+
+    //     await _repository.AddAsync(user);
+    //     return user;
+
+    // }
+
+    public async Task<AuthResult> RegisterAsync(RegisterRequest request)
+    {
+        var existing = await _repository.GetByEmailAsync(request.Email);
+        if (existing != null)
+            return new AuthResult(false, "Email already in use.");
+
+        if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 6)
+            return new AuthResult(false, "Invalid password. Minimum 6 characters required.");
 
         var user = new User
         {
-            Email = email,
-            PasswordHash = HashPassword(password)
+            Email = request.Email,
+            PasswordHash = HashPassword(request.Password)
         };
 
-        await _repository.AddAsync(user);
-        return user;
-
-    }
-
-    public async Task<User> RegisterAsync(RegisterRequest registerRequest)
-
-    {
-        return await RegisterAsync(registerRequest.Email, registerRequest.Password);
+        return new AuthResult(true, "Registration successful.", user);
     }
 
     public async Task<User?> LoginAsync(string email, string password)
