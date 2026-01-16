@@ -9,6 +9,8 @@ public class UserService
 {
     private readonly IUserRepository _repository;
 
+    // private readonly RegisterRequest _registerRequest;
+
     public UserService(IUserRepository repository)
     {
         _repository = repository;
@@ -19,7 +21,10 @@ public class UserService
         var existing = await _repository.GetByEmailAsync(email);
         if (existing != null)
             throw new InvalidOperationException("Email already in use.");
-        //error checking
+
+        else if (string.IsNullOrWhiteSpace(password) || password.Length < 6)
+            throw new ArgumentException("Invalid password.");
+
         var user = new User
         {
             Email = email,
@@ -29,6 +34,13 @@ public class UserService
         await _repository.AddAsync(user);
         return user;
     }
+
+    public async Task<User> RegisterAsync(RegisterRequest registerRequest)
+
+    {
+        return await RegisterAsync(registerRequest.Email, registerRequest.Password);
+    }
+
     public async Task<User?> LoginAsync(string email, string password)
     {
         var user = await _repository.GetByEmailAsync(email);
