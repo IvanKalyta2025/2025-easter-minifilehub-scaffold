@@ -34,11 +34,14 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login(LoginRequest request)
     {
         var user = await _userService.LoginAsync(request.Email, request.Password);
-
         if (user == null)
-            return Unauthorized("Invalid email or password.");
+            return Unauthorized(new { error = "Invalid email or password." });
 
-        return Ok(user);
+        return Ok(new
+        {
+            message = "Login successful.",
+            userId = user.Id
+        });
     }
 }
 
