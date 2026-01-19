@@ -10,6 +10,9 @@ namespace Api.Repositories
     {
         Task AddAsync(User user);
         Task<User?> GetByEmailAsync(string email);
+
+        Task SaveChangesAsync();
+
     }
 
 }

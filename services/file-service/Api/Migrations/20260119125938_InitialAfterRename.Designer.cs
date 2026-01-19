@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251218130445_AddUserProfile")]
-    partial class AddUserProfile
+    [Migration("20260119125938_InitialAfterRename")]
+    partial class InitialAfterRename
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -1,19 +1,20 @@
 using Api.Models;
 using Api.Repositories;
+using BCrypt.Net;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
 using Api.Controllers;
-using BCrypt.Net;
+
 
 namespace Api.Services;
 
-public class UserService
+public class UserAuthorizationService
 {
     private readonly IUserRepository _repository;
 
 
-    public UserService(IUserRepository repository)
+    public UserAuthorizationService(IUserRepository repository)
     {
         _repository = repository;
     }
@@ -33,6 +34,8 @@ public class UserService
             Email = request.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
         };
+        await _repository.AddAsync(user);
+        await _repository.SaveChangesAsync();
 
         return new AuthResult(true, "Registration successful.", user);
     }
@@ -41,7 +44,7 @@ public class UserService
     {
         var user = await _repository.GetByEmailAsync(request.Email);
 
-        if (user != null)
+        if (user == null)
             return new AuthResult(false, "User not found.");
 
         bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);

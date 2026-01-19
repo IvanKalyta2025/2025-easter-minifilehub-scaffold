@@ -20,7 +20,7 @@ builder.Services.AddScoped<IUserRepository, UserRepositoryDb>();
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<UserAuthorizationService>();
 builder.Services.AddControllers();
 builder.Services.AddScoped<FileService>();
 

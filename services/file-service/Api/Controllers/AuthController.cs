@@ -8,9 +8,9 @@ namespace Api.Controllers;
 [Route("[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly UserService _userService;
+    private readonly UserAuthorizationService _userService;
 
-    public AuthController(UserService userService)
+    public AuthController(UserAuthorizationService userService)
     {
         _userService = userService;
     }
@@ -36,8 +36,13 @@ public class AuthController : ControllerBase
         var result = await _userService.LoginAsync(request);
 
         if (!result.Success)
-            return BadRequest(result);
-        return Ok(result);
+            return BadRequest(new { error = result.Message });
+        else
+            return Ok(new
+            {
+                message = result.Message,
+                userId = result.User?.Id
+            });
     }
 }
 
