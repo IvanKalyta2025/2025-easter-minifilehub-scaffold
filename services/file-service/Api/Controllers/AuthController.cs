@@ -45,21 +45,20 @@ public class AuthController : ControllerBase
                 userId = result.User?.Id
             });
     }
-    [HttpPost("change")]
-    public async Task<IActionResult> Change(ChangePasswordRequest request)
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
     {
         var result = await _userService.ChangePasswordAsync(request);
 
         if (!result.Success)
             return BadRequest(new { error = result.Message });
 
-        else
-            return Ok(new
-            {
-                message = result.Message,
-                userId = result.User?.Id
-            }
-            );
+        return Ok(new
+        {
+            message = result.Message,
+            userId = result.User?.Id
+        }
+        );
     }
 }
 

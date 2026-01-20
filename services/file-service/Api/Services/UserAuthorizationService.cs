@@ -69,7 +69,7 @@ public class UserAuthorizationService
 
         await _repository.SaveChangesAsync();
 
-        return new AuthResult(true, "Change successful.");
+        return new AuthResult(true, "Change successful", user);
     }
 
     // public record ChangePasswordRequest(string Email, string currentPassword, string newPassword);
