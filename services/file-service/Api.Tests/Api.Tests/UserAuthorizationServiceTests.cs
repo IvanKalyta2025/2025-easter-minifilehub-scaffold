@@ -5,8 +5,9 @@ using NSubstitute;
 using FluentAssertions;
 using Xunit;
 using System.Reactive.Concurrency;
-using Moq;
-using Microsoft.AspNetCore.Identity; //dotnet add package Moq 
+using Microsoft.AspNetCore.Identity;
+
+//dotnet add package NSubstitute.Analyzers.CSharp
 
 
 
@@ -14,13 +15,13 @@ namespace Api.Tests;
 
 public class UserAuthorizationServiceTests
 {
-    private readonly Mock<IUserRepository> _userRepositoryMock;
-    private readonly UserAuthorizationService _userAuthorizationService;
+    private readonly IUserRepository _userRepository;
+    private readonly UserAuthorizationService _service;
 
     public UserAuthorizationServiceTests()
     {
-        _userRepositoryMock = new Mock<IUserRepository>();
-        _userAuthorizationService = new UserAuthorizationService(_userRepositoryMock.Object);
+        _userRepository = Substitute.For<IUserRepository>();
+        _service = new UserAuthorizationService(_userRepository);
     }
 
     [Theory]
@@ -28,14 +29,15 @@ public class UserAuthorizationServiceTests
     public async Task Register_ShouldReturnFailure_WhenEmailAlreadyExists(string email, string password)
     {
         //Arrange
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = email,
-            PasswordHash = password,
-        };
+        var existingUser = new User { Email = email };
+        _userRepository.GetByEmailAsync(email).Returns(existingUser);
+        var request = new RegisterRequest(email, password);
         //ACT
+        var result = await _service.RegisterAsync(request);
 
-        //ACCERT
+        //ASSERT
+        Assert.False(result.Success);
+        Assert.Equal("Email already in use.", result.Message);
+        await _userRepository.Received(0).AddAsync(Arg.Any<User>());
     }
 }

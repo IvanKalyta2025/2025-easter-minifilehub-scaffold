@@ -29,7 +29,6 @@ output "remote_repo" {
 locals {
     workers = [
     "IvanKalytaYOKO",
-    "jespergran98",
     ]
 }
 
