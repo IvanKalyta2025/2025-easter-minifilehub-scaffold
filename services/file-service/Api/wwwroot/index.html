@@ -3,77 +3,379 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Jobbmarked - Registrering</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>Jobbmarked - Min Side</title>
+    <style>
+      /* --- ВСТРОЕННЫЕ СТИЛИ (CSS) --- */
+      :root {
+        --primary-blue: #0056b3;
+        --primary-hover: #004494;
+        --success-green: #28a745;
+        --error-red: #dc3545;
+        --bg-light: #f4f6f8;
+        --white: #ffffff;
+        --text-main: #2c3e50;
+        --text-muted: #6c757d;
+        --border: #dee2e6;
+      }
+
+      body {
+        background-color: var(--bg-light);
+        color: var(--text-main);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 20px;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .card {
+        background-color: var(--white);
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      /* --- САМОЕ ВАЖНОЕ: СКРЫТИЕ БЛОКОВ --- */
+
+      /* 1. Скрываем все секции по умолчанию */
+      .form-section,
+      .visual-feedback {
+        display: none !important; /* Force hide */
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      /* 2. Показываем только активные */
+      .form-section.active,
+      .visual-feedback.active {
+        display: block !important; /* Force show */
+        animation: fadeIn 0.4s forwards;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Статусы */
+      .card.success-state {
+        border-color: var(--success-green);
+        background-color: #f0fff4;
+      }
+      .card.error-state {
+        border-color: var(--error-red);
+        animation: shake 0.4s;
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-5px);
+        }
+        75% {
+          transform: translateX(5px);
+        }
+      }
+
+      h2 {
+        margin-top: 0;
+        color: var(--primary-blue);
+        text-align: center;
+        font-size: 1.5rem;
+        margin-bottom: 25px;
+      }
+      .input-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 500;
+        color: var(--text-main);
+      }
+      input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 1rem;
+        box-sizing: border-box;
+      }
+      input:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+      }
+
+      button.primary-btn {
+        width: 100%;
+        padding: 12px;
+        background-color: var(--primary-blue);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-top: 15px;
+        transition: background 0.2s;
+      }
+      button.primary-btn:hover {
+        background-color: var(--primary-hover);
+      }
+
+      .toggle-links {
+        margin-top: 25px;
+        text-align: center;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+      }
+      .link {
+        color: var(--primary-blue);
+        cursor: pointer;
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+      .visual-feedback {
+        text-align: center;
+        padding: 20px 0;
+      }
+      .icon {
+        font-size: 3rem;
+        display: block;
+        margin-bottom: 15px;
+      }
+    </style>
   </head>
   <body>
     <div class="container">
-      <div class="card">
-        <h2>Opprett ny konto</h2>
-        <form id="registerForm">
-          <div class="input-group">
-            <label for="email">E-postadresse</label>
-            <input
-              type="email"
-              id="email"
-              required
-              placeholder="ola.nordmann@eksempel.no"
-            />
+      <div class="card" id="mainCard">
+        <div id="login" class="form-section active">
+          <h2>Velkommen tilbake</h2>
+          <form onsubmit="handleAuth(event, '/Auth/login', 'login')">
+            <div class="input-group">
+              <label>E-postadresse</label>
+              <input
+                type="email"
+                name="email"
+                required
+                placeholder="ola@eksempel.no"
+              />
+            </div>
+            <div class="input-group">
+              <label>Passord</label>
+              <input
+                type="password"
+                name="password"
+                required
+                placeholder="Ditt passord"
+              />
+            </div>
+            <button type="submit" class="primary-btn">Logg inn</button>
+          </form>
+
+          <div class="toggle-links">
+            <p>
+              Ny bruker?
+              <span class="link" onclick="showSection('register')"
+                >Opprett konto</span
+              >
+            </p>
+            <p style="margin-top: 10px">
+              <span class="link" onclick="showSection('forgot')"
+                >Glemt passord?</span
+              >
+            </p>
           </div>
-          <div class="input-group">
-            <label for="password">Passord</label>
-            <input
-              type="password"
-              id="password"
-              required
-              placeholder="Minst 6 tegn"
-            />
+        </div>
+
+        <div id="register" class="form-section">
+          <h2>Opprett konto</h2>
+          <form onsubmit="handleAuth(event, '/Auth/register', 'register')">
+            <div class="input-group">
+              <label>E-postadresse</label>
+              <input
+                type="email"
+                name="email"
+                required
+                placeholder="ola@eksempel.no"
+              />
+            </div>
+            <div class="input-group">
+              <label>Passord</label>
+              <input
+                type="password"
+                name="password"
+                required
+                placeholder="Minst 6 tegn"
+              />
+            </div>
+            <button type="submit" class="primary-btn">Registrer deg</button>
+          </form>
+
+          <div class="toggle-links">
+            <p>
+              Har du allerede konto?
+              <span class="link" onclick="showSection('login')"
+                >Logg inn her</span
+              >
+            </p>
           </div>
-          <button type="submit">Registrer deg</button>
-        </form>
-        <div id="message" class="message"></div>
+        </div>
+
+        <div id="forgot" class="form-section">
+          <h2>Endre passord</h2>
+          <p
+            style="
+              color: #666;
+              font-size: 0.9em;
+              text-align: center;
+              margin-bottom: 20px;
+            "
+          >
+            Skriv inn din e-post og det nye passordet.
+          </p>
+          <form onsubmit="handleAuth(event, '/Auth/change-password', 'change')">
+            <div class="input-group">
+              <label>E-postadresse</label>
+              <input type="email" name="email" required />
+            </div>
+            <div class="input-group">
+              <label>Nytt passord</label>
+              <input
+                type="password"
+                name="newPassword"
+                required
+                placeholder="Nytt sterkt passord"
+              />
+            </div>
+            <button type="submit" class="primary-btn">Oppdater passord</button>
+          </form>
+
+          <div class="toggle-links">
+            <span class="link" onclick="showSection('login')"
+              >Tilbake til logg inn</span
+            >
+          </div>
+        </div>
+
+        <div id="feedback" class="visual-feedback">
+          <span id="icon" class="icon"></span>
+          <h3 id="feedTitle"></h3>
+          <p id="feedMessage" style="color: #666"></p>
+          <button class="primary-btn" onclick="resetView()">OK</button>
+        </div>
       </div>
     </div>
 
     <script>
-      document
-        .getElementById("registerForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const email = document.getElementById("email").value;
-          const password = document.getElementById("password").value;
-          const messageBox = document.getElementById("message");
+      // Функция переключения экранов
+      function showSection(sectionId) {
+        document
+          .querySelectorAll(".form-section, .visual-feedback")
+          .forEach((el) => {
+            el.classList.remove("active");
+          });
+        const card = document.getElementById("mainCard");
+        card.classList.remove("success-state", "error-state");
 
-          // Сброс стиля сообщения перед новым запросом
-          messageBox.style.color = "var(--text-muted)";
-          messageBox.innerText = "Behandler..."; // Обработка...
+        const target = document.getElementById(sectionId);
+        if (target) target.classList.add("active");
+      }
 
+      function resetView() {
+        showSection("login");
+      }
+
+      async function handleAuth(event, url, type) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const data = Object.fromEntries(formData.entries());
+
+        if (type === "change" && data.newPassword) {
+          data.password = data.newPassword;
+          delete data.newPassword;
+        }
+
+        const card = document.getElementById("mainCard");
+        const icon = document.getElementById("icon");
+        const title = document.getElementById("feedTitle");
+        const msg = document.getElementById("feedMessage");
+        const btn = event.target.querySelector("button");
+        const originalText = btn.innerText;
+
+        btn.innerText = "Behandler...";
+        btn.disabled = true;
+
+        try {
+          const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+          let result = {};
           try {
-            // УБЕДИСЬ, что твой C# контроллер слушает именно '/Auth/register'
-            const response = await fetch("/Auth/register", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email, password }),
-            });
+            result = await response.json();
+          } catch (e) {}
 
-            const result = await response.json();
+          showSection("feedback");
 
-            if (result.success) {
-              // Используем профессиональный зеленый цвет для успеха
-              messageBox.style.color = "#28a745";
-              // Сообщение берется с сервера, убедись, что там тоже можно отдавать на норвежском
-              messageBox.innerText = "Suksess! " + result.message;
+          if (response.ok && result.success !== false) {
+            card.classList.add("success-state");
+            icon.innerText = "✅";
+            if (type === "login") {
+              title.innerText = "Velkommen inn!";
+              msg.innerText = "Du er nå logget inn.";
+            } else if (type === "register") {
+              title.innerText = "Konto opprettet";
+              msg.innerText = "Registrering var vellykket.";
             } else {
-              // Профессиональный красный для ошибки
-              messageBox.style.color = "#dc3545";
-              messageBox.innerText = "Feil: " + result.message; // Ошибка: ...
+              title.innerText = "Passord endret";
+              msg.innerText = "Husk det nye passordet ditt.";
             }
-          } catch (error) {
-            console.error("Error:", error);
-            messageBox.style.color = "#dc3545";
-            messageBox.innerText = "Kunne ikke koble til serveren."; // Не удалось подключиться к серверу
+          } else {
+            card.classList.add("error-state");
+            icon.innerText = "⚠️";
+            title.innerText = "Noe gikk galt";
+            msg.innerText =
+              result.message || "Feil data, vennligst prøv igjen.";
           }
-        });
+        } catch (error) {
+          showSection("feedback");
+          card.classList.add("error-state");
+          icon.innerText = "🔌";
+          title.innerText = "Tilkoblingsfeil";
+          msg.innerText = "Sjekk at serveren kjører.";
+          console.error(error);
+        } finally {
+          btn.innerText = originalText;
+          btn.disabled = false;
+        }
+      }
     </script>
   </body>
 </html>

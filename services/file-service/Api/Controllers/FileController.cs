@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Http;
 
+
+//локальный контроллер для minio
 namespace Api
 {
     [ApiController]
@@ -27,7 +29,6 @@ namespace Api
             await file.CopyToAsync(memoryStream);
             var fileData = memoryStream.ToArray();
 
-            // BucketName берется из appsettings
             string bucketName = "sape";
 
             await _fileService.UploadFileAsync(bucketName, file.FileName, fileData);
@@ -50,18 +51,6 @@ namespace Api
             {
                 return NotFound($"File '{fileName}' was not found.");
             }
-            // var provider = new FileExtensionContentTypeProvider();
-
-            // //string contentType;
-            // // Пытаемся понять тип по имени файла (например, "photo.jpg" -> "image/jpeg")
-            // if (!provider.TryGetContentType(fileName, out contentType))
-            // {
-            //     // Если расширение незнакомое, ставим дефолт
-            //     contentType = "application/octet-stream";
-            // }
-
-            // Использование FileContentResult для явного указания имени файла
-            // Это гарантирует, что браузер получит заголовок Content-Disposition: attachment
             var fileResult = new FileContentResult(fileData, contentType)
             {
                 FileDownloadName = fileName

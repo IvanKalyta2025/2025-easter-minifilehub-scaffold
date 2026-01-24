@@ -12,7 +12,6 @@ namespace Api.Services
     public class ProfileService
     {
         private readonly IProfileRepository _profileRepository;
-        //private readonly IUserRepository _userRepository;
         private readonly FileService _fileService;
 
         public ProfileService(IProfileRepository profileRepository, FileService fileService)
