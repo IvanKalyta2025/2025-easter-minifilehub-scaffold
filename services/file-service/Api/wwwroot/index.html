@@ -67,8 +67,34 @@
           </div>
         </div>
 
-        <div id="profile" class="form-section">
+        <div id="profile-view" class="form-section">
           <h2>Min Profil</h2>
+          <div class="profile-display">
+            <img
+              id="displayAvatar"
+              src="https://via.placeholder.com/150"
+              class="avatar-preview"
+            />
+            <div class="info-group">
+              <p>
+                <strong>Navn:</strong>
+                <span id="displayFullName">Ikke satt</span>
+              </p>
+            </div>
+          </div>
+          <button class="primary-btn" onclick="showSection('profile')">
+            Rediger profil
+          </button>
+          <div class="toggle-links">
+            <span class="link" onclick="showSection('change-password')"
+              >Bytt passord</span
+            >
+            <span class="link" onclick="showSection('login')">Logg ut</span>
+          </div>
+        </div>
+
+        <div id="profile" class="form-section">
+          <h2>Rediger Profil</h2>
           <form onsubmit="handleProfileUpdate(event)">
             <div class="avatar-upload">
               <img
@@ -86,12 +112,12 @@
                 onchange="previewImage(this)"
               />
             </div>
-
             <div class="form-row">
               <div class="input-group" style="flex: 1">
                 <label>Fornavn</label>
                 <input
                   type="text"
+                  id="editFirstName"
                   name="FirstName"
                   placeholder="Ola"
                   required
@@ -101,6 +127,7 @@
                 <label>Etternavn</label>
                 <input
                   type="text"
+                  id="editLastName"
                   name="LastName"
                   placeholder="Nordmann"
                   required
@@ -110,10 +137,9 @@
             <button type="submit" class="primary-btn">Lagre profil</button>
           </form>
           <div class="toggle-links">
-            <span class="link" onclick="showSection('change-password')"
-              >Bytt passord</span
+            <span class="link" onclick="showSection('profile-view')"
+              >Avbryt</span
             >
-            <span class="link" onclick="showSection('login')">Logg ut</span>
           </div>
         </div>
 
@@ -149,19 +175,10 @@
             <button type="submit" class="primary-btn">Oppdater passord</button>
           </form>
           <div class="toggle-links">
-            <span class="link" onclick="showSection('profile')"
-              >Tilbake til profil</span
+            <span class="link" onclick="showSection('profile-view')"
+              >Tilbake</span
             >
           </div>
-        </div>
-
-        <div id="feedback" class="visual-feedback">
-          <span id="icon" class="icon"></span>
-          <h3 id="feedTitle"></h3>
-          <p id="feedMessage" style="color: #666"></p>
-          <button class="primary-btn" onclick="showSection('profile')">
-            Tilbake til profil
-          </button>
         </div>
       </div>
     </div>
@@ -169,9 +186,8 @@
     <script>
       function showSection(id) {
         document
-          .querySelectorAll(".form-section, .visual-feedback")
+          .querySelectorAll(".form-section")
           .forEach((el) => el.classList.remove("active"));
-        document.getElementById("mainCard").className = "card";
         document.getElementById(id).classList.add("active");
 
         if (id === "login") {
@@ -205,12 +221,12 @@
           if (response.ok) {
             if (token) {
               localStorage.setItem("token", token);
-              showSection("profile");
+              showSection("profile-view");
             } else if (type === "register") {
               showSection("login");
             } else if (type === "change-password") {
               alert("Passord er endret!");
-              showSection("profile");
+              showSection("profile-view");
             }
           } else {
             alert(result.error || result.message || "Noe gikk galt");
@@ -243,12 +259,15 @@
           });
 
           if (response.ok) {
-            showSection("feedback");
-            document.getElementById("mainCard").classList.add("success-state");
-            document.getElementById("icon").innerText = "🎉";
-            document.getElementById("feedTitle").innerText = "Profil Lagret!";
-            document.getElementById("feedMessage").innerText =
-              "Dine endringer er oppdatert.";
+            const firstName = document.getElementById("editFirstName").value;
+            const lastName = document.getElementById("editLastName").value;
+            const avatarSrc = document.getElementById("avatarPreview").src;
+
+            document.getElementById("displayFullName").innerText =
+              `${firstName} ${lastName}`;
+            document.getElementById("displayAvatar").src = avatarSrc;
+
+            showSection("profile-view");
           } else if (response.status === 401) {
             showSection("login");
           } else {
