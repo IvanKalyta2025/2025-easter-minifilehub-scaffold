@@ -21,45 +21,44 @@ public class ProfileController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateOrUpdateProfile([FromForm] ProfileRequest request)
     {
-
-        var userId = GetCurrentUserId(); // Метод ниже
+        var userId = GetCurrentUserId();
 
         if (userId == Guid.Empty)
-            return Unauthorized(new { message = "Logg inn først" }); // Сначала войдите
+            return Unauthorized(new { message = "Logg inn først" });
 
-        string avatarUrl = string.Empty;
+        var existingProfile = await _repository.GetByUserIdAsync(userId);
+        string avatarUrl = existingProfile?.AvatarUrl ?? string.Empty;
 
-        // 2. Если есть файл — грузим через твой метод UploadFileAsync
         if (request.AvatarFile != null)
         {
-            // Генерируем уникальное имя файла для MinIO
             var fileExtension = Path.GetExtension(request.AvatarFile.FileName);
             var objectName = $"avatar_{userId}{fileExtension}";
 
             using var stream = request.AvatarFile.OpenReadStream();
-
-            // Вызываем ТВОЙ метод репозитория
             await _repository.UploadFileAsync(objectName, stream);
-
-            // Формируем ссылку, по которой файл будет доступен
-            // (предполагаю, что у тебя есть контроллер FileController с методом download)
             avatarUrl = $"/File/download/{objectName}";
         }
 
-        // 3. Собираем твою модель Profile
-        var profile = new Profile
+        if (existingProfile == null)
         {
-            UserId = userId,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            AvatarUrl = avatarUrl
-            // User = ... (EF Core сам подтянет связь, если ID верный)
-        };
+            var profile = new Profile
+            {
+                UserId = userId,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                AvatarUrl = avatarUrl
+            };
+            await _repository.AddAsync(profile);
+        }
+        else
+        {
+            existingProfile.FirstName = request.FirstName;
+            existingProfile.LastName = request.LastName;
+            existingProfile.AvatarUrl = avatarUrl;
+            await _repository.UpdateAsync(existingProfile);
+        }
 
-        // 4. Сохраняем в БД через твой метод
-        await _repository.AddAsync(profile);
-
-        return Ok(new { success = true, message = "Profil lagret!", data = profile });
+        return Ok(new { success = true, message = "Profil lagret!" });
     }
 
     [HttpGet]
@@ -72,19 +71,15 @@ public class ProfileController : ControllerBase
         return Ok(profile);
     }
 
-    // Хелпер для получения ID
-    // Вспомогательный метод для получения ID из Токена
     private Guid GetCurrentUserId()
     {
-        // Ищем в "паспорте" (Claims) строчку с ID пользователя
-        // ClaimTypes.NameIdentifier мы положили туда в JwtTokenService
         var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
 
         if (idClaim != null && Guid.TryParse(idClaim.Value, out var guid))
         {
-            return guid; // Возвращаем РЕАЛЬНЫЙ ID
+            return guid;
         }
 
-        return Guid.Empty; // Если токена нет или он кривой
+        return Guid.Empty;
     }
 }
