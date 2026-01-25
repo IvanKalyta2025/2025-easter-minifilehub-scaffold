@@ -31,11 +31,6 @@
         <div class="brand-header">
           <h1>Jobbmarked</h1>
           <p>Din karriere starter her</p>
-
-          <!-- Avatar in header -->
-          <div class="avatar-display" style="margin: 18px auto 0">
-            <img id="brand-avatar" src="default-avatar.png" alt="Avatar" />
-          </div>
         </div>
 
         <!-- LOGIN -->
@@ -317,8 +312,8 @@
             const avatarUrl = profile.avatarUrl || "default-avatar.png";
             document.getElementById("view-avatar").src = avatarUrl;
 
-            const brandAvatar = document.getElementById("brand-avatar");
-            if (brandAvatar) brandAvatar.src = avatarUrl;
+            // const brandAvatar = document.getElementById("brand-avatar");
+            // if (brandAvatar) brandAvatar.src = avatarUrl;
 
             document.getElementById("edit-firstname").value =
               profile.firstName || "";
@@ -358,6 +353,10 @@
           });
 
           if (response.ok) {
+            const previewSrc = document.getElementById(
+              "edit-avatar-preview",
+            ).src;
+            document.getElementById("view-avatar").src = previewSrc;
             await loadProfileData();
           } else {
             const err = await response.text().catch(() => "");
