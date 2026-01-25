@@ -1,96 +1,152 @@
+/* style.css (replace полностью) */
 :root {
-  --primary: #2563eb; /* Насыщенный синий */
-  --primary-hover: #1d4ed8;
-  --bg-gradient: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-  --card-bg: #ffffff;
-  --text-main: #1f2937;
-  --text-muted: #6b7280;
-  --border: #e5e7eb;
-  --input-bg: #f9fafb;
-  --radius: 12px;
-  --shadow:
-    0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --accent: #2563eb;
+  --accent-2: #7c3aed;
+
+  --bg: #0b1220;
+  --text: #0f172a;
+  --muted: #64748b;
+
+  --surface: rgba(255, 255, 255, 0.72);
+  --surface-2: rgba(255, 255, 255, 0.55);
+  --border: rgba(15, 23, 42, 0.1);
+
+  --input-bg: rgba(255, 255, 255, 0.75);
+
+  --radius: 18px;
+  --shadow: 0 20px 50px rgba(2, 6, 23, 0.16);
+  --shadow-soft: 0 12px 30px rgba(2, 6, 23, 0.12);
+
+  --ring: 0 0 0 4px rgba(37, 99, 235, 0.18);
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background: var(--bg-gradient);
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-main);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Arial,
+    sans-serif;
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  padding: 24px;
   overflow-x: hidden;
+
+  /* layered background */
+  background:
+    radial-gradient(
+      900px 500px at 20% 10%,
+      rgba(37, 99, 235, 0.22),
+      transparent 55%
+    ),
+    radial-gradient(
+      700px 420px at 90% 20%,
+      rgba(124, 58, 237, 0.18),
+      transparent 55%
+    ),
+    radial-gradient(
+      900px 520px at 50% 100%,
+      rgba(14, 165, 233, 0.12),
+      transparent 60%
+    ),
+    linear-gradient(135deg, #f8fafc 0%, #eef2ff 40%, #f1f5f9 100%);
 }
 
-/* Фоновая декорация */
+/* Decorative blob (keeps your HTML element) */
 .background-shape {
-  position: absolute;
-  width: 100%;
-  height: 50vh;
-  background: #2563eb;
-  top: 0;
-  left: 0;
+  position: fixed;
+  inset: -120px -120px auto -120px;
+  height: 55vh;
   z-index: -1;
-  clip-path: polygon(0 0, 100% 0, 100% 70%, 0 100%);
+  background: linear-gradient(
+    120deg,
+    rgba(37, 99, 235, 0.9),
+    rgba(124, 58, 237, 0.85)
+  );
+  filter: blur(30px);
+  opacity: 0.35;
+  border-radius: 999px;
+  transform: rotate(-8deg);
 }
 
 .container {
   width: 100%;
-  max-width: 420px;
-  padding: 20px;
+  max-width: 460px;
 }
 
 .card {
-  background: var(--card-bg);
-  padding: 40px 30px;
   border-radius: var(--radius);
+  padding: 34px 28px;
   box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface), var(--surface-2));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Brand */
+.brand-header {
+  margin-bottom: 22px;
   text-align: center;
 }
 
-.brand-header {
-  margin-bottom: 30px;
-}
 .brand-header h1 {
-  color: #2563eb;
-  font-size: 2rem;
-  font-weight: 800;
-}
-.brand-header p {
-  color: var(--text-muted);
+  font-size: clamp(1.9rem, 4vw, 2.15rem);
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  background: linear-gradient(120deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
+.brand-header p {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* Sections + animation */
 .form-section {
-  display: none; /* Скрыто по умолчанию */
+  display: none;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(10px) scale(0.99);
   transition:
-    opacity 0.3s ease,
-    transform 0.3s ease;
+    opacity 220ms ease,
+    transform 220ms ease;
 }
 
 .form-section.active {
-  display: flex; /* Flex чтобы работали gap */
+  display: flex;
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
 h2 {
-  font-size: 1.5rem;
-  margin-bottom: 5px;
-  color: var(--text-main);
+  font-size: 1.35rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
 }
 
-/* Инпуты */
+/* Inputs */
 .input-group {
   position: relative;
   text-align: left;
@@ -100,140 +156,187 @@ h2 {
   display: block;
   margin-bottom: 6px;
   font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-main);
+  font-weight: 650;
+  color: rgba(15, 23, 42, 0.9);
 }
 
 .input-group input {
   width: 100%;
-  padding: 12px 12px 12px 40px; /* Отступ под иконку */
-  border: 2px solid var(--border);
-  border-radius: 8px;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
   background: var(--input-bg);
+  padding: 12px 14px;
   font-size: 1rem;
-  transition: all 0.2s;
+  transition:
+    box-shadow 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease,
+    background 160ms ease;
 }
 
-.input-group .input-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%; /* Центр */
-  transform: translateY(-50%); /* Точная центровка */
-  color: var(--text-muted);
-  font-size: 20px;
-  pointer-events: none;
+.input-icon + input {
+  padding-left: 44px; /* только когда реально есть иконка */
 }
-/* Если есть label, иконку нужно опустить чуть ниже */
-.input-group label + .input-icon {
-  top: 42px;
-}
-.input-group label + input {
-  /* Если есть лейбл, иконка не нужна внутри инпута, или настроим иначе. 
-       В моем HTML выше я использовал иконки без лейблов в логине. */
+
+.input-group input::placeholder {
+  color: rgba(100, 116, 139, 0.9);
 }
 
 .input-group input:focus {
-  border-color: var(--primary);
   outline: none;
-  background: #fff;
+  border-color: rgba(37, 99, 235, 0.45);
+  box-shadow: var(--ring);
+  background: rgba(255, 255, 255, 0.92);
 }
 
-/* Кнопки */
+.input-group input:active {
+  transform: translateY(0.5px);
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(100, 116, 139, 0.95);
+  font-size: 20px;
+  pointer-events: none;
+}
+
+/* Buttons */
 button {
   width: 100%;
-  padding: 12px;
-  border-radius: 8px;
+  border-radius: 14px;
+  padding: 12px 14px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
+  border: 1px solid transparent;
   cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
 }
 
 .primary-btn {
-  background: var(--primary);
   color: white;
-  border: none;
+  background: linear-gradient(120deg, var(--accent), var(--accent-2));
+  box-shadow: var(--shadow-soft);
 }
+
 .primary-btn:hover {
-  background: var(--primary-hover);
   transform: translateY(-1px);
+  box-shadow: 0 16px 40px rgba(37, 99, 235, 0.18);
 }
+
+.primary-btn:active {
+  transform: translateY(0px);
+}
+
 .primary-btn:disabled {
   opacity: 0.7;
   cursor: wait;
-}
-
-.secondary-btn {
-  background: #f3f4f6;
-  color: var(--text-main);
-  border: none;
-}
-.secondary-btn:hover {
-  background: #e5e7eb;
+  transform: none;
+  box-shadow: none;
 }
 
 .outline-btn {
-  background: transparent;
-  border: 2px solid var(--border);
-  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(15, 23, 42, 0.14);
+  color: rgba(15, 23, 42, 0.75);
 }
+
 .outline-btn:hover {
-  border-color: var(--text-muted);
-  color: var(--text-main);
+  border-color: rgba(15, 23, 42, 0.22);
+  background: rgba(255, 255, 255, 0.72);
+  transform: translateY(-1px);
 }
 
-.button-row {
-  display: flex;
-  gap: 10px;
-}
-
-/* Ссылки */
+/* Links */
 .toggle-links {
-  margin-top: 10px;
-  font-size: 0.9rem;
-  color: var(--text-muted);
+  margin-top: 8px;
+  font-size: 0.95rem;
+  color: var(--muted);
+  text-align: center;
 }
+
 .link {
-  color: var(--primary);
-  font-weight: 600;
+  color: var(--accent);
+  font-weight: 750;
   cursor: pointer;
 }
+
 .link:hover {
   text-decoration: underline;
 }
 
-/* --- АВАТАР (Красивая загрузка) --- */
-.avatar-display {
-  margin: 0 auto 15px;
-  width: 100px;
-  height: 100px;
+/* Profile */
+.profile-header {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  margin-bottom: 4px;
 }
+
+.profile-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 750;
+  color: rgba(30, 41, 59, 0.9);
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+}
+
+/* Avatar */
+.avatar-display {
+  width: 104px;
+  height: 104px;
+}
+
 .avatar-display img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 50%;
-  border: 3px solid white;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 26px rgba(2, 6, 23, 0.18);
 }
 
 .avatar-upload-container {
   position: relative;
-  width: 120px;
-  height: 120px;
-  margin: 0 auto 10px;
+  width: 124px;
+  height: 124px;
+  margin: 0 auto 8px;
   cursor: pointer;
-  border-radius: 50%;
+  border-radius: 999px;
   overflow: hidden;
-  border: 3px solid #e5e7eb;
-  transition: border-color 0.3s;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.55);
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }
+
 .avatar-upload-container:hover {
-  border-color: var(--primary);
+  transform: translateY(-1px);
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: var(--shadow-soft);
 }
 
 .avatar-upload-container img {
@@ -244,38 +347,105 @@ button {
 
 .avatar-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(2, 6, 23, 0.45);
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 160ms ease;
 }
+
 .avatar-overlay span {
   color: white;
-  font-size: 32px;
+  font-size: 34px;
 }
+
 .avatar-upload-container:hover .avatar-overlay {
   opacity: 1;
 }
 
 .hint-text {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-bottom: 20px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 10px;
 }
 
-.role-badge {
-  background: #e0e7ff;
-  color: #3730a3;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  display: inline-block;
-  margin-top: 5px;
+.button-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Mobile */
+@media (max-width: 420px) {
+  .card {
+    padding: 28px 20px;
+  }
+  .button-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: rgba(241, 245, 249, 0.95);
+    --muted: rgba(148, 163, 184, 0.9);
+    --surface: rgba(15, 23, 42, 0.62);
+    --surface-2: rgba(15, 23, 42, 0.48);
+    --border: rgba(148, 163, 184, 0.14);
+    --input-bg: rgba(15, 23, 42, 0.55);
+    --shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    --shadow-soft: 0 14px 35px rgba(0, 0, 0, 0.35);
+  }
+
+  body {
+    background:
+      radial-gradient(
+        900px 500px at 20% 10%,
+        rgba(37, 99, 235, 0.22),
+        transparent 55%
+      ),
+      radial-gradient(
+        700px 420px at 90% 20%,
+        rgba(124, 58, 237, 0.18),
+        transparent 55%
+      ),
+      radial-gradient(
+        900px 520px at 50% 100%,
+        rgba(14, 165, 233, 0.12),
+        transparent 60%
+      ),
+      linear-gradient(135deg, #050914 0%, #070b18 40%, #050914 100%);
+  }
+
+  .input-group label {
+    color: rgba(241, 245, 249, 0.9);
+  }
+
+  .input-group input {
+    color: rgba(241, 245, 249, 0.95);
+    border-color: rgba(148, 163, 184, 0.18);
+  }
+
+  .outline-btn {
+    background: rgba(15, 23, 42, 0.35);
+    color: rgba(241, 245, 249, 0.85);
+    border-color: rgba(148, 163, 184, 0.18);
+  }
+
+  .role-badge {
+    color: rgba(241, 245, 249, 0.9);
+    background: rgba(99, 102, 241, 0.16);
+    border-color: rgba(99, 102, 241, 0.22);
+  }
 }

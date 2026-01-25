@@ -3,24 +3,40 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
     <title>Jobbmarked - Min Profil</title>
+
+    <!-- Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Icons -->
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
     />
+
     <link rel="stylesheet" href="style.css" />
   </head>
+
   <body>
-    <div class="background-shape"></div>
-    <div class="container">
+    <div class="background-shape" aria-hidden="true"></div>
+
+    <main class="container">
       <div class="card" id="mainCard">
         <div class="brand-header">
           <h1>Jobbmarked</h1>
           <p>Din karriere starter her</p>
         </div>
 
-        <div id="login" class="form-section active">
+        <!-- LOGIN -->
+        <section id="login" class="form-section active">
           <h2>Velkommen tilbake</h2>
+
           <form onsubmit="handleAuth(event, '/Auth/login', 'login')">
             <div class="input-group">
               <span class="material-symbols-outlined input-icon">mail</span>
@@ -29,8 +45,11 @@
                 name="email"
                 required
                 placeholder="E-postadresse"
+                autocomplete="email"
+                inputmode="email"
               />
             </div>
+
             <div class="input-group">
               <span class="material-symbols-outlined input-icon">lock</span>
               <input
@@ -38,10 +57,13 @@
                 name="password"
                 required
                 placeholder="Passord"
+                autocomplete="current-password"
               />
             </div>
+
             <button type="submit" class="primary-btn">Logg inn</button>
           </form>
+
           <div class="toggle-links">
             <p>
               Har du ikke konto?
@@ -50,10 +72,12 @@
               >
             </p>
           </div>
-        </div>
+        </section>
 
-        <div id="register" class="form-section">
+        <!-- REGISTER -->
+        <section id="register" class="form-section">
           <h2>Opprett konto</h2>
+
           <form onsubmit="handleAuth(event, '/Auth/register', 'register')">
             <div class="input-group">
               <span class="material-symbols-outlined input-icon">mail</span>
@@ -62,8 +86,11 @@
                 name="email"
                 required
                 placeholder="E-postadresse"
+                autocomplete="email"
+                inputmode="email"
               />
             </div>
+
             <div class="input-group">
               <span class="material-symbols-outlined input-icon">lock</span>
               <input
@@ -71,36 +98,45 @@
                 name="password"
                 required
                 placeholder="Passord"
+                autocomplete="new-password"
               />
             </div>
+
             <button type="submit" class="primary-btn">Registrer deg</button>
           </form>
+
           <div class="toggle-links">
             <p>
               Har du allerede konto?
               <span class="link" onclick="showSection('login')">Logg inn</span>
             </p>
           </div>
-        </div>
+        </section>
 
-        <div id="profile-view" class="form-section">
+        <!-- PROFILE VIEW -->
+        <section id="profile-view" class="form-section">
           <div class="profile-header">
             <div class="avatar-display">
               <img id="view-avatar" src="default-avatar.png" alt="Avatar" />
             </div>
+
             <h2 id="view-fullname">Laster...</h2>
             <p class="role-badge">Bruker</p>
           </div>
+
           <div class="profile-actions">
             <button class="primary-btn" onclick="showSection('profile-edit')">
-              <span class="material-symbols-outlined">edit</span> Rediger profil
+              <span class="material-symbols-outlined">edit</span>
+              Rediger profil
             </button>
             <button class="outline-btn" onclick="logout()">Logg ut</button>
           </div>
-        </div>
+        </section>
 
-        <div id="profile-edit" class="form-section">
+        <!-- PROFILE EDIT -->
+        <section id="profile-edit" class="form-section">
           <h2>Rediger profil</h2>
+
           <form onsubmit="handleProfileUpdate(event)">
             <div
               class="avatar-upload-container"
@@ -114,6 +150,7 @@
               <div class="avatar-overlay">
                 <span class="material-symbols-outlined">photo_camera</span>
               </div>
+
               <input
                 type="file"
                 name="Avatar"
@@ -123,24 +160,28 @@
                 onchange="previewImage(this)"
               />
             </div>
+
             <p class="hint-text">Trykk på bildet for å endre</p>
 
             <div class="input-group">
-              <label>Fornavn</label>
+              <label for="edit-firstname">Fornavn</label>
               <input
                 type="text"
                 name="FirstName"
                 id="edit-firstname"
                 placeholder="Ola"
+                autocomplete="given-name"
               />
             </div>
+
             <div class="input-group">
-              <label>Etternavn</label>
+              <label for="edit-lastname">Etternavn</label>
               <input
                 type="text"
                 name="LastName"
                 id="edit-lastname"
                 placeholder="Nordmann"
+                autocomplete="family-name"
               />
             </div>
 
@@ -155,21 +196,27 @@
               <button type="submit" class="primary-btn">Lagre endringer</button>
             </div>
           </form>
-        </div>
+        </section>
       </div>
-    </div>
+
+      <noscript>
+        <p style="margin-top: 16px; text-align: center">
+          Denne siden krever JavaScript for å fungere.
+        </p>
+      </noscript>
+    </main>
 
     <script>
-      /* --- UI Логика --- */
+      /* --- UI логика --- */
       function showSection(id) {
         document.querySelectorAll(".form-section").forEach((s) => {
           s.classList.remove("active");
-          s.style.display = "none"; // Скрываем полностью для анимации
+          s.style.display = "none";
         });
+
         const target = document.getElementById(id);
         if (target) {
           target.style.display = "flex";
-          // Небольшая задержка для запуска CSS анимации
           setTimeout(() => target.classList.add("active"), 10);
         }
       }
@@ -185,15 +232,14 @@
         }
       }
 
-      /* --- Логика Авторизации --- */
+      /* --- Логика авторизации --- */
       async function handleAuth(event, url, type) {
         event.preventDefault();
-        // Собираем данные формы в объект
+
         const formData = new FormData(event.target);
         const data = Object.fromEntries(formData.entries());
 
         try {
-          // 1. Основной запрос (Login или Register)
           const response = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -206,12 +252,9 @@
             return;
           }
 
-          // 2. Логика успеха
           if (type === "register") {
-            // АВТО-ЛОГИН: Сразу вызываем вход с теми же данными
             await performAutoLogin(data.email, data.password);
           } else {
-            // Обычный вход
             const result = await response.json();
             processLoginSuccess(result);
           }
@@ -221,7 +264,6 @@
         }
       }
 
-      // Функция для автоматического входа после регистрации
       async function performAutoLogin(email, password) {
         try {
           const response = await fetch("/Auth/login", {
@@ -234,7 +276,6 @@
             const result = await response.json();
             processLoginSuccess(result);
           } else {
-            // Если авто-вход не сработал, кидаем на логин
             alert("Konto opprettet! Vennligst logg inn.");
             showSection("login");
           }
@@ -265,7 +306,7 @@
 
           if (response.ok) {
             const profile = await response.json();
-            // Заполняем просмотр
+
             document.getElementById("view-fullname").innerText =
               `${profile.firstName || ""} ${profile.lastName || ""}`.trim() ||
               "Ukjent Bruker";
@@ -273,7 +314,6 @@
             const avatarUrl = profile.avatarUrl || "default-avatar.png";
             document.getElementById("view-avatar").src = avatarUrl;
 
-            // Заполняем форму редактирования (и превью там же)
             document.getElementById("edit-firstname").value =
               profile.firstName || "";
             document.getElementById("edit-lastname").value =
@@ -282,7 +322,6 @@
 
             showSection("profile-view");
           } else if (response.status === 404) {
-            // Профиля нет -> сразу на редактирование
             showSection("profile-edit");
           } else {
             logout();
@@ -295,8 +334,10 @@
 
       async function handleProfileUpdate(event) {
         event.preventDefault();
+
         const token = localStorage.getItem("token");
         const formData = new FormData(event.target);
+
         const btn = event.target.querySelector("button[type='submit']");
         const originalText = btn.innerText;
 
@@ -329,7 +370,6 @@
       }
 
       window.onload = () => {
-        // Проверяем токен при загрузке
         if (localStorage.getItem("token")) {
           loadProfileData();
         } else {
