@@ -14,15 +14,11 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. Настройка БД ---
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql("Host=postgres;Database=filesdb;Username=user;Password=pass"));
 
-// --- 2. Настройка Порта ---
 builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
-// --- 3. Настройка JWT Аутентификации (Самое важное) ---
-// Мы говорим .NET: "Если видишь заголовок Authorization, проверяй его как JWT"
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -30,64 +26,53 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    // Ключ шифрования. В продакшене он должен быть в переменных окружения!
-    // Здесь мы берем его из конфига или используем безопасный фоллбэк, чтобы Docker не падал.
     var keyString = builder.Configuration["Jwt:Key"] ?? "super_secret_key_must_be_very_long_at_least_32_chars";
     var key = Encoding.UTF8.GetBytes(keyString);
 
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        // Проверять, что токен подписан именно нашим ключом
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
-
-        // Проверять, не истек ли срок действия (7 дней)
         ValidateLifetime = true,
-
-        // Убираем задержку на "протухание" (по умолчанию 5 минут)
         ClockSkew = TimeSpan.Zero,
-
-        // Пока отключаем проверку издателя (Issuer) и аудитории (Audience) для простоты Docker-сети
         ValidateIssuer = false,
         ValidateAudience = false
     };
 });
 
-// --- 4. Регистрация сервисов ---
 builder.Services.AddScoped<IUserRepository, UserRepositoryDb>();
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
-builder.Services.AddScoped<JwtTokenService>(); // Наш генератор
+builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<UserAuthorizationService>();
 builder.Services.AddScoped<MinioService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Настройка Swagger, чтобы в нем можно было вводить Токен (удобно для тестов)
 builder.Services.AddSwaggerGen(c =>
 {
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "Вставь токен так: Bearer {твой_токен}",
+        Description = "Input token like this: Bearer {your_token}",
         Name = "Authorization",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
 
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            new OpenApiSecurityScheme
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                Reference = new OpenApiReference
                 {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
                 },
                 Scheme = "oauth2",
                 Name = "Bearer",
-                In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                In = ParameterLocation.Header,
             },
             new List<string>()
         }
@@ -95,8 +80,6 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
-
-// --- 5. Middleware Pipeline (Порядок важен!) ---
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
@@ -109,27 +92,39 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Миграции
 using (var scope = app.Services.CreateScope())
 {
-    try
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<AppDbContext>();
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    for (int i = 0; i < 10; i++)
     {
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        context.Database.Migrate();
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Ошибка при миграции: {ex.Message}");
+        try
+        {
+            logger.LogInformation("Database connection attempt {Attempt}...", i + 1);
+            context.Database.Migrate();
+            logger.LogInformation("Database migrated successfully.");
+            break;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("Database is not ready yet: {Message}. Waiting 3 seconds...", ex.Message);
+            if (i == 9)
+            {
+                logger.LogError("Could not connect to database after 10 attempts.");
+                throw;
+            }
+            Thread.Sleep(3000);
+        }
     }
 }
 
-// Статика (HTML/CSS)
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-// --- БЛОК БЕЗОПАСНОСТИ ---
-app.UseAuthentication(); // <--- ЭТОГО НЕ БЫЛО. Проверяет "Кто ты?" (читает токен)
-app.UseAuthorization();  // <--- Проверяет "Можно ли тебе сюда?" (читает роль/доступ)
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
