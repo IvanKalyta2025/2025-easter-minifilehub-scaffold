@@ -24,14 +24,22 @@ namespace Api
 
         public async Task<string> UploadFileAsync(string bucketName, string objectName, byte[] fileData)
         {
-            var existsArgs = new BucketExistsArgs().WithBucket(bucketName);
-            bool found = await _minioClient.BucketExistsAsync(existsArgs).ConfigureAwait(false);
-
-            if (!found)
+            try
             {
-                var makeArgs = new MakeBucketArgs().WithBucket(bucketName);
-                await _minioClient.MakeBucketAsync(makeArgs).ConfigureAwait(false);
+                var existsArgs = new BucketExistsArgs().WithBucket(bucketName);
+                bool found = await _minioClient.BucketExistsAsync(existsArgs).ConfigureAwait(false);
+
+                if (!found)
+                {
+                    var makeArgs = new MakeBucketArgs().WithBucket(bucketName);
+                    await _minioClient.MakeBucketAsync(makeArgs).ConfigureAwait(false);
+                }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Bucket check/creation failed: {ex.Message}");
+            }
+
             if (!_contentTypeProvider.TryGetContentType(objectName, out string contentType))
             {
                 contentType = "application/octet-stream";
@@ -46,11 +54,11 @@ namespace Api
                 .WithObjectSize(stream.Length)
                 .WithContentType(contentType);
 
-            var result = await _minioClient.PutObjectAsync(putObjectArgs).ConfigureAwait(false);
-            var fileUrl = $"http://file-service.localhost/{bucketName}/{objectName}";
-            return fileUrl;
+            await _minioClient.PutObjectAsync(putObjectArgs).ConfigureAwait(false);
+            return $"http://file-service.localhost/{bucketName}/{objectName}";
         }
-        public async Task<(byte[] Data, string ContentType)> DownloadFileAsync(string bucketName, string objectName) //добавлен ContentType
+
+        public async Task<(byte[]? Data, string? ContentType)> DownloadFileAsync(string bucketName, string objectName)
         {
             try
             {
@@ -66,32 +74,19 @@ namespace Api
 
                 await _minioClient.GetObjectAsync(getObjectArgs).ConfigureAwait(false);
 
+                if (memoryStream.Length == 0) return (null, null);
 
-                if (memoryStream.Length == 0)
-                {
-                    return (null, null);
-                }
                 if (!_contentTypeProvider.TryGetContentType(objectName, out string contentType))
                 {
                     contentType = "application/octet-stream";
                 }
 
                 return (memoryStream.ToArray(), contentType);
-
             }
-            catch (Minio.Exceptions.ObjectNotFoundException)
+            catch
             {
-                return (null, null);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[CRITICAL ERROR] Тип ошибки: {ex.GetType().Name}");
-                Console.WriteLine($"[CRITICAL ERROR] Сообщение: {ex.Message}");
-                Console.WriteLine($"Ошибка при скачивании файла: {ex.Message}");
-
                 return (null, null);
             }
         }
-
     }
 }
