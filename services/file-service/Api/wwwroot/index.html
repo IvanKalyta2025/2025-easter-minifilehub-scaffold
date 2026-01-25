@@ -204,6 +204,47 @@
         }
       }
 
+      async function loadProfileData() {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        try {
+          const response = await fetch("/api/Profile", {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            const profile = result.data || result;
+
+            if (profile) {
+              document.getElementById("displayFullName").innerText =
+                `${profile.firstName} ${profile.lastName}`;
+              document.getElementById("editFirstName").value =
+                profile.firstName || "";
+              document.getElementById("editLastName").value =
+                profile.lastName || "";
+
+              if (profile.avatarUrl) {
+                document.getElementById("displayAvatar").src =
+                  profile.avatarUrl;
+                document.getElementById("avatarPreview").src =
+                  profile.avatarUrl;
+              }
+
+              showSection("profile-view");
+            }
+          } else if (response.status === 401) {
+            showSection("login");
+          }
+        } catch (e) {
+          console.error("Profile load failed:", e);
+        }
+      }
+
       async function handleAuth(event, url, type) {
         event.preventDefault();
         const data = Object.fromEntries(new FormData(event.target).entries());
@@ -221,7 +262,7 @@
           if (response.ok) {
             if (token) {
               localStorage.setItem("token", token);
-              showSection("profile-view");
+              await loadProfileData();
             } else if (type === "register") {
               showSection("login");
             } else if (type === "change-password") {
@@ -259,15 +300,7 @@
           });
 
           if (response.ok) {
-            const firstName = document.getElementById("editFirstName").value;
-            const lastName = document.getElementById("editLastName").value;
-            const avatarSrc = document.getElementById("avatarPreview").src;
-
-            document.getElementById("displayFullName").innerText =
-              `${firstName} ${lastName}`;
-            document.getElementById("displayAvatar").src = avatarSrc;
-
-            showSection("profile-view");
+            await loadProfileData();
           } else if (response.status === 401) {
             showSection("login");
           } else {
@@ -279,6 +312,13 @@
           btn.innerText = "Lagre profil";
         }
       }
+
+      window.onload = () => {
+        const token = localStorage.getItem("token");
+        if (token) {
+          loadProfileData();
+        }
+      };
     </script>
   </body>
 </html>
