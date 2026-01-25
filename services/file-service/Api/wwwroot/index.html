@@ -207,6 +207,8 @@
     </main>
 
     <script>
+      const AVATAR_CACHE_KEY = "avatar_preview";
+
       function showSection(id) {
         document.querySelectorAll(".form-section").forEach((s) => {
           s.classList.remove("active");
@@ -235,9 +237,13 @@
         if (!src) return;
         const view = document.getElementById("view-avatar");
         const edit = document.getElementById("edit-avatar-preview");
-
         if (view) view.src = src;
         if (edit) edit.src = src;
+      }
+
+      function applyCachedAvatarIfAny() {
+        const cached = localStorage.getItem(AVATAR_CACHE_KEY);
+        if (cached) setAvatarEverywhere(cached);
       }
 
       async function handleAuth(event, url, type) {
@@ -306,6 +312,9 @@
           return;
         }
 
+        // 1) Сразу применяем локально сохранённый аватар (на случай, если сервер не отдаёт avatarUrl)
+        applyCachedAvatarIfAny();
+
         try {
           const response = await fetch("/api/Profile", {
             headers: { Authorization: `Bearer ${token}` },
@@ -318,10 +327,9 @@
               `${profile.firstName || ""} ${profile.lastName || ""}`.trim() ||
               "Ukjent Bruker";
 
-            // ВАЖНО: не перезатираем UI дефолтом, если сервер еще не отдал avatarUrl
+            // 2) Если сервер всё-таки отдает avatarUrl — используем его и кэшируем
             const serverAvatar = profile.avatarUrl || "";
             if (serverAvatar && serverAvatar !== "default-avatar.png") {
-              // cache-bust чтобы не тянуло старую картинку
               const busted =
                 serverAvatar +
                 (serverAvatar.includes("?") ? "&" : "?") +
@@ -329,6 +337,7 @@
                 Date.now();
 
               setAvatarEverywhere(busted);
+              localStorage.setItem(AVATAR_CACHE_KEY, busted);
             }
 
             document.getElementById("edit-firstname").value =
@@ -375,7 +384,10 @@
 
             setAvatarEverywhere(previewSrc);
 
-            // 2) потом подтянуть профиль (и обновить avatarUrl, если сервер уже отдает)
+            // 2) сохранить в localStorage, чтобы после F5 не откатывалось
+            localStorage.setItem(AVATAR_CACHE_KEY, previewSrc);
+
+            // 3) подтянуть профиль (имя/фамилия и, если сервер отдаст, avatarUrl)
             await loadProfileData();
           } else {
             const err = await response.text().catch(() => "");
@@ -391,10 +403,15 @@
 
       function logout() {
         localStorage.removeItem("token");
+        // Если хочешь, чтобы при выходе аватар сбрасывался — раскомментируй:
+        // localStorage.removeItem(AVATAR_CACHE_KEY);
         showSection("login");
       }
 
       window.onload = () => {
+        // применяем кэш сразу, ещё до запросов
+        applyCachedAvatarIfAny();
+
         if (localStorage.getItem("token")) {
           loadProfileData();
         } else {
