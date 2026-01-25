@@ -137,6 +137,15 @@
               <span class="material-symbols-outlined">edit</span>
               Rediger profil
             </button>
+
+            <button
+              class="outline-btn"
+              onclick="showSection('change-password')"
+            >
+              <span class="material-symbols-outlined">lock_reset</span>
+              Endre passord
+            </button>
+
             <button class="outline-btn" onclick="logout()">Logg ut</button>
           </div>
         </section>
@@ -204,6 +213,65 @@
               <button type="submit" class="primary-btn">Lagre endringer</button>
             </div>
           </form>
+        </section>
+
+        <!-- CHANGE PASSWORD -->
+        <section id="change-password" class="form-section">
+          <h2>Endre passord</h2>
+
+          <form onsubmit="handleChangePassword(event)">
+            <div class="input-group">
+              <span class="material-symbols-outlined input-icon">lock</span>
+              <input
+                type="password"
+                id="current-password"
+                required
+                placeholder="Nåværende passord"
+                autocomplete="current-password"
+              />
+            </div>
+
+            <div class="input-group">
+              <span class="material-symbols-outlined input-icon">lock</span>
+              <input
+                type="password"
+                id="new-password"
+                required
+                placeholder="Nytt passord"
+                autocomplete="new-password"
+                minlength="6"
+              />
+            </div>
+
+            <div class="input-group">
+              <span class="material-symbols-outlined input-icon">lock</span>
+              <input
+                type="password"
+                id="confirm-password"
+                required
+                placeholder="Gjenta nytt passord"
+                autocomplete="new-password"
+                minlength="6"
+              />
+            </div>
+
+            <div class="button-row">
+              <button
+                type="button"
+                class="outline-btn"
+                onclick="showSection('profile-view')"
+              >
+                Avbryt
+              </button>
+              <button type="submit" class="primary-btn">Bytt passord</button>
+            </div>
+          </form>
+
+          <div class="toggle-links" style="margin-top: 10px">
+            <p style="text-align: center">
+              Tips: bruk minst 8 tegn og bland bokstaver + tall.
+            </p>
+          </div>
         </section>
       </div>
 
@@ -309,7 +377,7 @@
             alert("Konto opprettet! Vennligst logg inn.");
             showSection("login");
           }
-        } catch (e) {
+        } catch {
           showSection("login");
         }
       }
@@ -329,6 +397,7 @@
           return;
         }
 
+        // show cached avatar immediately (prevents default on refresh)
         applyCachedAvatarIfAny();
 
         try {
@@ -343,6 +412,7 @@
               `${profile.firstName || ""} ${profile.lastName || ""}`.trim() ||
               "Ukjent Bruker";
 
+            // If server gives avatarUrl, use it and cache it
             const serverAvatar = profile.avatarUrl || "";
             if (serverAvatar && serverAvatar !== "default-avatar.png") {
               const busted =
@@ -387,11 +457,12 @@
         try {
           const response = await fetch("/api/Profile", {
             method: "POST",
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${token}` }, // IMPORTANT: no Content-Type for FormData
             body: formData,
           });
 
           if (response.ok) {
+            // show new avatar immediately + cache (so refresh doesn't revert)
             const previewSrc = document.getElementById(
               "edit-avatar-preview",
             ).src;
@@ -404,7 +475,84 @@
             const err = await response.text().catch(() => "");
             alert(`Kunne ikke lagre profil. (${response.status}) ${err}`);
           }
-        } catch (error) {
+        } catch {
+          alert("Serverfeil.");
+        } finally {
+          btn.innerText = originalText;
+          btn.disabled = false;
+        }
+      }
+
+      async function handleChangePassword(event) {
+        event.preventDefault();
+
+        const currentPassword =
+          document.getElementById("current-password").value;
+        const newPassword = document.getElementById("new-password").value;
+        const confirmPassword =
+          document.getElementById("confirm-password").value;
+
+        if (newPassword !== confirmPassword) {
+          alert("Passordene er ikke like.");
+          return;
+        }
+
+        const token = localStorage.getItem("token");
+        if (!token) {
+          showSection("login");
+          return;
+        }
+
+        const btn = event.target.querySelector("button[type='submit']");
+        const originalText = btn.innerText;
+        btn.innerText = "Bytter...";
+        btn.disabled = true;
+
+        const endpoints = [
+          "/Auth/change-password",
+          "/Auth/changePassword",
+          "/api/Profile/change-password",
+          "/api/Profile/password",
+        ];
+
+        const payloads = [
+          { currentPassword, newPassword },
+          { oldPassword: currentPassword, newPassword },
+          { password: currentPassword, newPassword },
+        ];
+
+        try {
+          let lastStatus = 0;
+          let lastErr = "";
+
+          for (const url of endpoints) {
+            for (const bodyObj of payloads) {
+              const resp = await fetch(url, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(bodyObj),
+              });
+
+              if (resp.ok) {
+                alert("Passord endret!");
+                // clear fields
+                document.getElementById("current-password").value = "";
+                document.getElementById("new-password").value = "";
+                document.getElementById("confirm-password").value = "";
+                showSection("profile-view");
+                return;
+              }
+
+              lastStatus = resp.status;
+              lastErr = await resp.text().catch(() => "");
+            }
+          }
+
+          alert(`Kunne ikke endre passord. (${lastStatus}) ${lastErr}`.trim());
+        } catch {
           alert("Serverfeil.");
         } finally {
           btn.innerText = originalText;
