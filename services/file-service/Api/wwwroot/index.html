@@ -231,6 +231,15 @@
         }
       }
 
+      function setAvatarEverywhere(src) {
+        if (!src) return;
+        const view = document.getElementById("view-avatar");
+        const edit = document.getElementById("edit-avatar-preview");
+
+        if (view) view.src = src;
+        if (edit) edit.src = src;
+      }
+
       async function handleAuth(event, url, type) {
         event.preventDefault();
 
@@ -309,17 +318,23 @@
               `${profile.firstName || ""} ${profile.lastName || ""}`.trim() ||
               "Ukjent Bruker";
 
-            const avatarUrl = profile.avatarUrl || "default-avatar.png";
-            document.getElementById("view-avatar").src = avatarUrl;
+            // ВАЖНО: не перезатираем UI дефолтом, если сервер еще не отдал avatarUrl
+            const serverAvatar = profile.avatarUrl || "";
+            if (serverAvatar && serverAvatar !== "default-avatar.png") {
+              // cache-bust чтобы не тянуло старую картинку
+              const busted =
+                serverAvatar +
+                (serverAvatar.includes("?") ? "&" : "?") +
+                "v=" +
+                Date.now();
 
-            // const brandAvatar = document.getElementById("brand-avatar");
-            // if (brandAvatar) brandAvatar.src = avatarUrl;
+              setAvatarEverywhere(busted);
+            }
 
             document.getElementById("edit-firstname").value =
               profile.firstName || "";
             document.getElementById("edit-lastname").value =
               profile.lastName || "";
-            document.getElementById("edit-avatar-preview").src = avatarUrl;
 
             showSection("profile-view");
           } else if (response.status === 404) {
@@ -353,10 +368,14 @@
           });
 
           if (response.ok) {
+            // 1) сразу показать новое фото из превью
             const previewSrc = document.getElementById(
               "edit-avatar-preview",
             ).src;
-            document.getElementById("view-avatar").src = previewSrc;
+
+            setAvatarEverywhere(previewSrc);
+
+            // 2) потом подтянуть профиль (и обновить avatarUrl, если сервер уже отдает)
             await loadProfileData();
           } else {
             const err = await response.text().catch(() => "");
