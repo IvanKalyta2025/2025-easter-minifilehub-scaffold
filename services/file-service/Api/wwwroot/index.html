@@ -66,17 +66,11 @@
               alt="Avatar"
               class="avatar-large"
             />
-            <h2 id="view-fullname">Navn Navnesen</h2>
+            <h2 id="view-fullname">Laster...</h2>
           </div>
           <div class="profile-actions">
             <button class="secondary-btn" onclick="showSection('profile-edit')">
               Rediger profil
-            </button>
-            <button
-              class="secondary-btn"
-              onclick="showSection('change-password')"
-            >
-              Bytt passord
             </button>
             <button class="outline-btn" onclick="logout()">Logg ut</button>
           </div>
@@ -109,32 +103,6 @@
             </div>
           </form>
         </div>
-
-        <div id="change-password" class="form-section">
-          <h2>Bytt passord</h2>
-          <form
-            onsubmit="
-              handleAuth(event, '/Auth/change-password', 'change-password')
-            "
-          >
-            <div class="input-group">
-              <label>Gammelt passord</label>
-              <input type="password" name="oldPassword" required />
-            </div>
-            <div class="input-group">
-              <label>Nytt passord</label>
-              <input type="password" name="newPassword" required />
-            </div>
-            <button type="submit" class="primary-btn">Oppdater passord</button>
-            <button
-              type="button"
-              class="outline-btn"
-              onclick="showSection('profile-view')"
-            >
-              Tilbake
-            </button>
-          </form>
-        </div>
       </div>
     </div>
 
@@ -143,13 +111,13 @@
         document
           .querySelectorAll(".form-section")
           .forEach((s) => s.classList.remove("active"));
-        document.getElementById(id).classList.add("active");
+        const target = document.getElementById(id);
+        if (target) target.classList.add("active");
       }
 
       async function handleAuth(event, url, type) {
         event.preventDefault();
-        const formData = new FormData(event.target);
-        const data = Object.fromEntries(formData.entries());
+        const data = Object.fromEntries(new FormData(event.target).entries());
 
         try {
           const response = await fetch(url, {
@@ -165,24 +133,29 @@
               return;
             }
 
-            // Если это логин, ожидаем JSON с токеном
             const result = await response.json();
-            localStorage.setItem("token", result.token);
-            await loadProfileData();
+            const token = result.token || result.Token;
+
+            if (token) {
+              localStorage.setItem("token", token);
+              await loadProfileData();
+            }
           } else {
-            // Пытаемся прочитать текст ошибки, если он есть
-            const errorResult = await response.json().catch(() => ({}));
-            alert(errorResult.message || errorResult.error || "Noe gikk galt");
+            const errorText = await response.text();
+            alert("Feil: " + errorText);
           }
         } catch (e) {
-          console.error("Auth Error:", e);
-          alert("Serverfeil: Kunne ikke koble til.");
+          console.error(e);
+          alert("Serverfeil или проблема с JSON");
         }
       }
 
       async function loadProfileData() {
         const token = localStorage.getItem("token");
-        if (!token) return;
+        if (!token) {
+          showSection("login");
+          return;
+        }
 
         try {
           const response = await fetch("/api/Profile", {
@@ -203,11 +176,14 @@
               profile.lastName || "";
 
             showSection("profile-view");
-          } else if (response.status === 401) {
+          } else if (response.status === 404) {
+            showSection("profile-edit");
+          } else {
             logout();
           }
         } catch (error) {
-          console.error("Load Profile Error:", error);
+          console.error(error);
+          showSection("profile-edit");
         }
       }
 
@@ -243,9 +219,7 @@
       }
 
       window.onload = () => {
-        if (localStorage.getItem("token")) {
-          loadProfileData();
-        }
+        if (localStorage.getItem("token")) loadProfileData();
       };
     </script>
   </body>
