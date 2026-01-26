@@ -19,7 +19,6 @@ namespace Api
             _minioClient = new MinioClient()
                 .WithEndpoint(configuration["Minio:Endpoint"])
                 .WithCredentials(configuration["Minio:AccessKey"], configuration["Minio:SecretKey"])
-                .WithSSL(false)
                 .Build();
 
             _contentTypeProvider = new FileExtensionContentTypeProvider();
