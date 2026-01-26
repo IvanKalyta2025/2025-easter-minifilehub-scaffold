@@ -73,7 +73,13 @@
           </form>
 
           <div class="toggle-links">
-            <p>
+            <p style="margin: 10px 0 0; text-align: center">
+              <span class="link" onclick="prefillEmailToPublicChangePassword()"
+                >Endre passord</span
+              >
+            </p>
+
+            <p style="margin-top: 10px">
               Har du ikke konto?
               <span class="link" onclick="showSection('register')"
                 >Opprett ny bruker</span
@@ -117,6 +123,77 @@
             <p>
               Har du allerede konto?
               <span class="link" onclick="showSection('login')">Logg inn</span>
+            </p>
+          </div>
+        </section>
+
+        <!-- CHANGE PASSWORD (PUBLIC, BEFORE LOGIN) -->
+        <section id="change-password-public" class="form-section">
+          <h2>Endre passord</h2>
+
+          <form onsubmit="handleChangePasswordPublic(event)">
+            <div class="input-group">
+              <span class="material-symbols-outlined input-icon">mail</span>
+              <input
+                type="email"
+                id="cp-email"
+                required
+                placeholder="E-postadresse"
+                autocomplete="email"
+                inputmode="email"
+              />
+            </div>
+
+            <div class="input-group">
+              <span class="material-symbols-outlined input-icon">lock</span>
+              <input
+                type="password"
+                id="cp-current-password"
+                required
+                placeholder="Nåværende passord"
+                autocomplete="current-password"
+              />
+            </div>
+
+            <div class="input-group">
+              <span class="material-symbols-outlined input-icon">lock</span>
+              <input
+                type="password"
+                id="cp-new-password"
+                required
+                placeholder="Nytt passord"
+                autocomplete="new-password"
+                minlength="6"
+              />
+            </div>
+
+            <div class="input-group">
+              <span class="material-symbols-outlined input-icon">lock</span>
+              <input
+                type="password"
+                id="cp-confirm-password"
+                required
+                placeholder="Gjenta nytt passord"
+                autocomplete="new-password"
+                minlength="6"
+              />
+            </div>
+
+            <div class="button-row">
+              <button
+                type="button"
+                class="outline-btn"
+                onclick="showSection('login')"
+              >
+                Tilbake
+              </button>
+              <button type="submit" class="primary-btn">Bytt passord</button>
+            </div>
+          </form>
+
+          <div class="toggle-links" style="margin-top: 10px">
+            <p style="text-align: center">
+              Du må skrive riktig e-post og nåværende passord.
             </p>
           </div>
         </section>
@@ -215,11 +292,11 @@
           </form>
         </section>
 
-        <!-- CHANGE PASSWORD -->
+        <!-- CHANGE PASSWORD (LOGGED IN) -->
         <section id="change-password" class="form-section">
           <h2>Endre passord</h2>
 
-          <form onsubmit="handleChangePassword(event)">
+          <form onsubmit="handleChangePasswordLoggedIn(event)">
             <div class="input-group">
               <span class="material-symbols-outlined input-icon">lock</span>
               <input
@@ -283,7 +360,6 @@
     </main>
 
     <script>
-      // cache is per-email now (prevents avatar leaking between accounts)
       const LAST_EMAIL_KEY = "last_email";
       let initialRenderDone = false;
 
@@ -314,46 +390,12 @@
           .toLowerCase();
       }
 
-      function avatarKeyForEmail(email) {
-        const safe = (email || "").trim().toLowerCase();
-        return safe ? `avatar_preview:${safe}` : null;
-      }
-
       function setAvatarEverywhere(src) {
         if (!src) return;
         const view = document.getElementById("view-avatar");
         const edit = document.getElementById("edit-avatar-preview");
         if (view) view.src = src;
         if (edit) edit.src = src;
-      }
-
-      function applyCachedAvatarForEmail(email) {
-        const key = avatarKeyForEmail(email);
-        if (!key) return;
-        const cached = localStorage.getItem(key);
-        if (cached) setAvatarEverywhere(cached);
-      }
-
-      function cacheAvatarForEmail(email, src) {
-        const key = avatarKeyForEmail(email);
-        if (!key || !src) return;
-        localStorage.setItem(key, src);
-      }
-
-      function clearAvatarCacheForEmail(email) {
-        const key = avatarKeyForEmail(email);
-        if (!key) return;
-        localStorage.removeItem(key);
-      }
-
-      function clearAllAvatarCaches() {
-        // safety: remove any avatar_preview:* keys
-        for (let i = localStorage.length - 1; i >= 0; i--) {
-          const k = localStorage.key(i);
-          if (k && k.startsWith("avatar_preview:")) {
-            localStorage.removeItem(k);
-          }
-        }
       }
 
       function previewImage(input) {
@@ -367,13 +409,28 @@
         }
       }
 
+      // ---- helper: prefill public change password email from login form
+      function prefillEmailToPublicChangePassword() {
+        const loginEmailInput = document.querySelector(
+          "#login input[name='email']",
+        );
+        const email = (
+          loginEmailInput?.value ||
+          getCurrentEmail() ||
+          ""
+        ).trim();
+        const cpEmail = document.getElementById("cp-email");
+        if (cpEmail && email) cpEmail.value = email;
+
+        showSection("change-password-public");
+      }
+
       async function handleAuth(event, url, type) {
         event.preventDefault();
 
         const formData = new FormData(event.target);
         const data = Object.fromEntries(formData.entries());
 
-        // remember which user is currently logging in/registering
         if (data.email) localStorage.setItem(LAST_EMAIL_KEY, data.email);
 
         try {
@@ -425,10 +482,6 @@
         const token = result.token || result.Token;
         if (token) {
           localStorage.setItem("token", token);
-
-          // after login, apply cached avatar for this email (if any)
-          applyCachedAvatarForEmail(getCurrentEmail());
-
           loadProfileData();
         }
       }
@@ -439,8 +492,6 @@
           showSection("login");
           return;
         }
-
-        const email = getCurrentEmail();
 
         try {
           const response = await fetch("/api/Profile", {
@@ -454,20 +505,16 @@
               `${profile.firstName || ""} ${profile.lastName || ""}`.trim() ||
               "Ukjent Bruker";
 
-            // If server gives avatarUrl, use it and cache it for THIS email
             const serverAvatar = profile.avatarUrl || "";
-            if (serverAvatar && serverAvatar !== "default-avatar.png") {
+            if (serverAvatar) {
               const busted =
                 serverAvatar +
                 (serverAvatar.includes("?") ? "&" : "?") +
                 "v=" +
                 Date.now();
-
               setAvatarEverywhere(busted);
-              cacheAvatarForEmail(email, busted);
             } else {
-              // no avatarUrl from server -> fallback to cached avatar for THIS email only
-              applyCachedAvatarForEmail(email);
+              setAvatarEverywhere("default-avatar.png");
             }
 
             document.getElementById("edit-firstname").value =
@@ -492,7 +539,6 @@
 
         const token = localStorage.getItem("token");
         const formData = new FormData(event.target);
-        const email = getCurrentEmail();
 
         const btn = event.target.querySelector("button[type='submit']");
         const originalText = btn.innerText;
@@ -503,19 +549,11 @@
         try {
           const response = await fetch("/api/Profile", {
             method: "POST",
-            headers: { Authorization: `Bearer ${token}` }, // IMPORTANT: no Content-Type for FormData
+            headers: { Authorization: `Bearer ${token}` },
             body: formData,
           });
 
           if (response.ok) {
-            // show new avatar immediately + cache for this email
-            const previewSrc = document.getElementById(
-              "edit-avatar-preview",
-            ).src;
-
-            setAvatarEverywhere(previewSrc);
-            cacheAvatarForEmail(email, previewSrc);
-
             await loadProfileData();
           } else {
             const err = await response.text().catch(() => "");
@@ -529,23 +567,21 @@
         }
       }
 
-      async function handleChangePassword(event) {
+      // ---- CHANGE PASSWORD (PUBLIC, NO TOKEN REQUIRED)
+      async function handleChangePasswordPublic(event) {
         event.preventDefault();
 
-        const currentPassword =
-          document.getElementById("current-password").value;
-        const newPassword = document.getElementById("new-password").value;
-        const confirmPassword =
-          document.getElementById("confirm-password").value;
+        const email = document.getElementById("cp-email").value.trim();
+        const currentPassword = document.getElementById(
+          "cp-current-password",
+        ).value;
+        const newPassword = document.getElementById("cp-new-password").value;
+        const confirmPassword = document.getElementById(
+          "cp-confirm-password",
+        ).value;
 
         if (newPassword !== confirmPassword) {
           alert("Passordene er ikke like.");
-          return;
-        }
-
-        const token = localStorage.getItem("token");
-        if (!token) {
-          showSection("login");
           return;
         }
 
@@ -554,49 +590,94 @@
         btn.innerText = "Bytter...";
         btn.disabled = true;
 
-        const endpoints = [
-          "/Auth/change-password",
-          "/Auth/changePassword",
-          "/api/Profile/change-password",
-          "/api/Profile/password",
-        ];
-
-        const payloads = [
-          { currentPassword, newPassword },
-          { oldPassword: currentPassword, newPassword },
-          { password: currentPassword, newPassword },
-        ];
-
         try {
-          let lastStatus = 0;
-          let lastErr = "";
+          const resp = await fetch("/Auth/change-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              Email: email,
+              CurrentPassword: currentPassword,
+              NewPassword: newPassword,
+            }),
+          });
 
-          for (const url of endpoints) {
-            for (const bodyObj of payloads) {
-              const resp = await fetch(url, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(bodyObj),
-              });
+          if (resp.ok) {
+            alert("Passord endret! Du kan logge inn nå.");
+            // keep email for login convenience
+            localStorage.setItem(LAST_EMAIL_KEY, email);
 
-              if (resp.ok) {
-                alert("Passord endret!");
-                document.getElementById("current-password").value = "";
-                document.getElementById("new-password").value = "";
-                document.getElementById("confirm-password").value = "";
-                showSection("profile-view");
-                return;
-              }
+            // clear fields
+            document.getElementById("cp-current-password").value = "";
+            document.getElementById("cp-new-password").value = "";
+            document.getElementById("cp-confirm-password").value = "";
 
-              lastStatus = resp.status;
-              lastErr = await resp.text().catch(() => "");
-            }
+            showSection("login");
+            return;
           }
 
-          alert(`Kunne ikke endre passord. (${lastStatus}) ${lastErr}`.trim());
+          const err = await resp.text().catch(() => "");
+          alert(`Kunne ikke endre passord. (${resp.status}) ${err}`.trim());
+        } catch {
+          alert("Serverfeil.");
+        } finally {
+          btn.innerText = originalText;
+          btn.disabled = false;
+        }
+      }
+
+      // ---- CHANGE PASSWORD (LOGGED IN)
+      async function handleChangePasswordLoggedIn(event) {
+        event.preventDefault();
+
+        const email = getCurrentEmail();
+        const currentPassword =
+          document.getElementById("current-password").value;
+        const newPassword = document.getElementById("new-password").value;
+        const confirmPassword =
+          document.getElementById("confirm-password").value;
+
+        if (!email) {
+          alert("Fant ikke e-post. Logg inn på nytt.");
+          logout();
+          return;
+        }
+
+        if (newPassword !== confirmPassword) {
+          alert("Passordene er ikke like.");
+          return;
+        }
+
+        const btn = event.target.querySelector("button[type='submit']");
+        const originalText = btn.innerText;
+        btn.innerText = "Bytter...";
+        btn.disabled = true;
+
+        try {
+          const token = localStorage.getItem("token"); // optional
+          const headers = { "Content-Type": "application/json" };
+          if (token) headers.Authorization = `Bearer ${token}`;
+
+          const resp = await fetch("/Auth/change-password", {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              Email: email,
+              CurrentPassword: currentPassword,
+              NewPassword: newPassword,
+            }),
+          });
+
+          if (resp.ok) {
+            alert("Passord endret!");
+            document.getElementById("current-password").value = "";
+            document.getElementById("new-password").value = "";
+            document.getElementById("confirm-password").value = "";
+            showSection("profile-view");
+            return;
+          }
+
+          const err = await resp.text().catch(() => "");
+          alert(`Kunne ikke endre passord. (${resp.status}) ${err}`.trim());
         } catch {
           alert("Serverfeil.");
         } finally {
@@ -606,24 +687,14 @@
       }
 
       function logout() {
-        const email = getCurrentEmail();
-
         localStorage.removeItem("token");
-        localStorage.removeItem(LAST_EMAIL_KEY);
-
-        // IMPORTANT: remove cached avatar for the current user (prevents leaking to other accounts)
-        if (email) clearAvatarCacheForEmail(email);
-        // (optional safety) if you want: clearAllAvatarCaches();
-
-        // reset UI images to default
+        // LAST_EMAIL_KEY оставляем (удобно для логина)
         setAvatarEverywhere("default-avatar.png");
-
         showSection("login");
       }
 
       window.onload = () => {
         if (localStorage.getItem("token")) {
-          // DO NOT apply cached avatar here (prevents cross-account flash)
           loadProfileData();
         } else {
           showSection("login");
