@@ -4,6 +4,7 @@ using Minio;
 using Microsoft.Extensions.Configuration;
 using Minio.DataModel.Args;
 using Microsoft.AspNetCore.StaticFiles;
+using System.Text.RegularExpressions;
 
 namespace Api
 {
@@ -12,6 +13,8 @@ namespace Api
         private readonly IMinioClient _minioClient;
         private readonly FileExtensionContentTypeProvider _contentTypeProvider;
         private readonly string _defaultBucketName;
+        //private static readonly Regex SafeNameRegex = new(@"^[a-zA-Z0-9_\-\.]+$", RegexOptions.Compiled); // Regex for safe object names
+        //https://www.geeksforgeeks.org/c-sharp/what-is-regular-expression-in-c-sharp/
 
         public MinioService(IConfiguration configuration)
         {
@@ -27,7 +30,7 @@ namespace Api
 
         public string DefaultBucketName => _defaultBucketName;
 
-        public async Task<string> UploadFileAsync(string bucketName, string objectName, byte[] fileData)
+        public async Task<string> UploadFileAsync(string bucketName, string objectName, Stream fileData)
         {
             bucketName = string.IsNullOrWhiteSpace(bucketName) ? _defaultBucketName : bucketName;
 
@@ -52,13 +55,13 @@ namespace Api
                 contentType = "application/octet-stream";
             }
 
-            using var stream = new MemoryStream(fileData);
+            // using var stream = new MemoryStream(); på grunn av jeg kaste byte[] til Stream   
 
             var putObjectArgs = new PutObjectArgs()
                 .WithBucket(bucketName)
                 .WithObject(objectName)
-                .WithStreamData(stream)
-                .WithObjectSize(stream.Length)
+                .WithStreamData(fileData)
+                .WithObjectSize(fileData.Length)
                 .WithContentType(contentType);
 
             await _minioClient.PutObjectAsync(putObjectArgs).ConfigureAwait(false);
