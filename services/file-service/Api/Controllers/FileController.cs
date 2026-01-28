@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.ResponseCompression;
-
+using Microsoft.AspNetCore.Authorization;
 
 //локальный контроллер для minio
 namespace Api
@@ -32,14 +32,13 @@ namespace Api
 
             return Ok($"File {file.FileName} uploaded successfully!");
         }
-
+        [AllowAnonymous]
         [HttpGet("download/{fileName}")]
         public async Task<IActionResult> Download(string fileName)
         {
-            Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{fileName}\"");
+            Response.Headers.Append("Content-Disposition", $"inline; filename=\"{fileName}\"");
             Response.ContentType = _fileService.GetContentType(fileName);
             await _fileService.DownloadFileAsync(_fileService.DefaultBucketName, fileName, Response.Body);
-
             return new EmptyResult();
         }
     }

@@ -78,7 +78,7 @@ namespace Api
                 var getObjectArgs = new GetObjectArgs()
                     .WithBucket(bucketName)
                     .WithObject(objectName)
-                    .WithCallbackStream((stream) =>
+                    .WithCallbackStream((Stream stream) =>
                     {
                         stream.CopyTo(destinationStream);
                     });
@@ -108,3 +108,8 @@ namespace Api
         }
     }
 }
+
+//docker logs -f
+//docker ps
+//файлы приходят в MinIO
+
