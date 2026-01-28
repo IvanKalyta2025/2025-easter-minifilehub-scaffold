@@ -58,6 +58,11 @@ namespace Api
 
             // using var stream = new MemoryStream(); på grunn av jeg kaste byte[] til Stream   
 
+            if (fileData.CanSeek)
+            {
+                fileData.Position = 0;
+            }
+
             var putObjectArgs = new PutObjectArgs()
                 .WithBucket(bucketName)
                 .WithObject(objectName)
@@ -80,7 +85,7 @@ namespace Api
                     .WithObject(objectName)
                     .WithCallbackStream((Stream stream) =>
                     {
-                        stream.CopyTo(destinationStream);
+                        stream.CopyToAsync(destinationStream).GetAwaiter().GetResult();
                     });
 
                 await _minioClient.GetObjectAsync(getObjectArgs).ConfigureAwait(false);
@@ -112,4 +117,4 @@ namespace Api
 //docker logs -f
 //docker ps
 //файлы приходят в MinIO
-
+//план: проверка через контейнер minio что файлы загружаются и доступны

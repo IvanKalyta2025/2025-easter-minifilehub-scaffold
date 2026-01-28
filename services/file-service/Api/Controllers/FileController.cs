@@ -1,12 +1,9 @@
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Authorization;
 
-//локальный контроллер для minio
 namespace Api
 {
     [ApiController]
@@ -14,6 +11,8 @@ namespace Api
     public class FileController : ControllerBase
     {
         private readonly MinioService _fileService;
+        private const long MaxFileSize = 10 * 1024 * 1024; // 10 MB limit
+        private readonly string[] _permittedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".pdf" };
 
         public FileController(MinioService fileService)
         {
@@ -24,23 +23,51 @@ namespace Api
         public async Task<IActionResult> Upload(IFormFile file)
         {
             if (file == null || file.Length == 0)
-                return BadRequest("File not selected");
+                return BadRequest("Файл не выбран.");
 
+            if (file.Length > MaxFileSize)
+                return BadRequest("Размер файла превышает допустимый лимит.");
+
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (string.IsNullOrEmpty(extension) || !((IList<string>)_permittedExtensions).Contains(extension))
+                return BadRequest("Недопустимый тип файла.");
+
+            // Нормализация имени файла для предотвращения Path Traversal и ошибок MinIO
+            var safeFileName = Path.GetFileName(file.FileName);
             string bucketName = _fileService.DefaultBucketName;
 
-            await _fileService.UploadFileAsync(bucketName, file.FileName, file.OpenReadStream());
+            using (var stream = file.OpenReadStream())
+            {
+                await _fileService.UploadFileAsync(bucketName, safeFileName, stream);
+            }
 
-            return Ok($"File {file.FileName} uploaded successfully!");
+            return Ok(new { FileName = safeFileName, Message = "Файл успешно загружен." });
         }
+
         [AllowAnonymous]
         [HttpGet("download/{fileName}")]
         public async Task<IActionResult> Download(string fileName)
         {
-            Response.Headers.Append("Content-Disposition", $"inline; filename=\"{fileName}\"");
-            Response.ContentType = _fileService.GetContentType(fileName);
-            await _fileService.DownloadFileAsync(_fileService.DefaultBucketName, fileName, Response.Body);
+            // Санитарная проверка имени файла
+            var safeFileName = Path.GetFileName(fileName);
+
+            // Устанавливаем ContentType заранее, если это возможно
+            Response.ContentType = _fileService.GetContentType(safeFileName);
+            Response.Headers.Append("Content-Disposition", $"inline; filename=\"{safeFileName}\"");
+
+            // Проверяем результат скачивания. Если MinIO не нашел файл, сервис вернет null.
+            var result = await _fileService.DownloadFileAsync(_fileService.DefaultBucketName, safeFileName, Response.Body);
+
+            if (result == null)
+            {
+                // Если файл не найден, мы не можем вернуть NotFound через IActionResult, 
+                // так как заголовки уже могут быть частично отправлены.
+                // Однако, в данном потоковом подходе это критическая точка.
+                return NotFound("Файл не найден в хранилище.");
+            }
+
             return new EmptyResult();
         }
     }
-}
 
+}
