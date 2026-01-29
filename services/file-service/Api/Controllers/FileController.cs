@@ -23,14 +23,14 @@ namespace Api
         public async Task<IActionResult> Upload(IFormFile file)
         {
             if (file == null || file.Length == 0)
-                return BadRequest("Файл не выбран.");
+                return BadRequest("File is required.");
 
             if (file.Length > MaxFileSize)
-                return BadRequest("Размер файла превышает допустимый лимит.");
+                return BadRequest("File size exceeds the allowed limit.");
 
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (string.IsNullOrEmpty(extension) || !((IList<string>)_permittedExtensions).Contains(extension))
-                return BadRequest("Недопустимый тип файла.");
+                return BadRequest("Invalid file type.");
 
             var safeFileName = Path.GetFileName(file.FileName);
             string bucketName = _fileService.DefaultBucketName;
@@ -40,7 +40,7 @@ namespace Api
                 await _fileService.UploadFileAsync(bucketName, safeFileName, stream);
             }
 
-            return Ok(new { FileName = safeFileName, Message = "Файл успешно загружен." });
+            return Ok(new { FileName = safeFileName, Message = "File uploaded successfully." });
         }
 
         [AllowAnonymous]
@@ -57,7 +57,7 @@ namespace Api
             if (result == null)
             {
 
-                return NotFound("Файл не найден в хранилище.");
+                return NotFound("File not found in storage.");
             }
 
             return new EmptyResult();
